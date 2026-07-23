@@ -110,7 +110,8 @@ function migrateCharacter(c) {
     drinkHistory: Array.isArray(c.drinkHistory) ? c.drinkHistory : [],
     story: typeof c.story === "string" ? c.story : "",
     paused: !!c.paused,
-    dead: !!c.dead
+    dead: !!c.dead,
+    cooldowns: (c.cooldowns && typeof c.cooldowns === "object") ? c.cooldowns : {}
   };
 }
 
@@ -215,7 +216,8 @@ function handleCreateSubmit(e) {
     drinkHistory: [],
     story: "",
     paused: false,
-    dead: false
+    dead: false,
+    cooldowns: {}
   };
 
   state.characters.push(character);
@@ -254,7 +256,46 @@ function roundDrunknessDrop(buzz) {
 
 function findBuffDef(buffId) {
   for (const d of SPECIAL_DRINKS) if (d.buff && d.buff.id === buffId) return d.buff;
+  for (const it of ITEMS) if (it.ability && it.ability.buff && it.ability.buff.id === buffId) return it.ability.buff;
   return null;
+}
+
+/* ---- item text helpers ---- */
+function effectStatText(effect) {
+  if (!effect || !Object.keys(effect).length) return "None";
+  return Object.entries(effect).map(([k, v]) => `${v >= 0 ? "+" : ""}${v} ${STAT_LABEL[k] || k}`).join(", ");
+}
+function perRoundText(p) {
+  if (!p) return "";
+  const parts = [];
+  if (p.gold) parts.push(`${p.gold >= 0 ? "+" : ""}${p.gold} 🪙`);
+  if (p.drunkness) parts.push(`${p.drunkness >= 0 ? "+" : ""}${p.drunkness}% drunkness`);
+  return parts.join(", ");
+}
+function abilityEffectText(ab) {
+  if (!ab) return "";
+  const parts = [];
+  if (ab.gold) parts.push(`${ab.gold >= 0 ? "+" : ""}${ab.gold} 🪙`);
+  if (ab.drunkness) parts.push(`${ab.drunkness >= 0 ? "+" : ""}${ab.drunkness}% drunkness`);
+  if (ab.buff) parts.push(`buff ${ab.buff.name} (${modsToText(ab.buff.statMods)})`);
+  let s = parts.join(", ") || "—";
+  if (ab.cooldownRounds) s += ` · cooldown ${ab.cooldownRounds}r`;
+  return s;
+}
+
+/* Abilities a character can use right now (from equipped + backpack, unique) */
+function characterAbilities(c) {
+  const seen = new Set(), out = [];
+  [...c.equipped, ...c.inventory].forEach(id => {
+    if (seen.has(id)) return;
+    seen.add(id);
+    const it = byId(ITEMS, id);
+    if (it && it.ability) {
+      const readyAt = (c.cooldowns || {})[id] || 0;
+      out.push({ item: it, ready: state.round >= readyAt, readyIn: Math.max(0, readyAt - state.round) });
+    }
+  });
+  return out;
 }
 
 function sumBuffMods(character) {
@@ -342,14 +383,17 @@ function describeThing(id) {
       .map(([k, v]) => `${STAT_LABEL[k] || k} ${v >= 0 ? "+" : ""}${v}`).join(", ") : "";
     return `Drunkness ${t.buzzDelta >= 0 ? "+" : ""}${t.buzzDelta}${b} · drink: ${t.realWorldServing}`;
   }
-  if (t.effect && Object.keys(t.effect).length)
-    return Object.entries(t.effect).map(([k, v]) => `${v >= 0 ? "+" : ""}${v} ${STAT_LABEL[k] || k}`).join(", ");
-  return "No effect";
+  // items
+  const parts = [];
+  if (t.effect && Object.keys(t.effect).length) parts.push(effectStatText(t.effect));
+  if (t.perRound) parts.push(perRoundText(t.perRound) + "/round");
+  if (t.ability) parts.push(`Active: ${t.ability.name}`);
+  return parts.length ? parts.join(" · ") : "No effect";
 }
 
 function thingBuffs(id) {
   const t = resolveThing(id);
-  if (t.kind === "item") return !!(t.effect && Object.keys(t.effect).length);
+  if (t.kind === "item") return !!((t.effect && Object.keys(t.effect).length) || t.perRound || t.ability);
   if (t.kind === "special") return !!t.buff;
   return false;
 }
@@ -431,6 +475,20 @@ function renderDetail(charId) {
 
   const race = byId(RACES, c.raceId), cls = byId(CLASSES, c.classId);
   const eff = effectiveStats(c);
+  const abilities = characterAbilities(c);
+  const abilitiesHtml = abilities.length ? `
+    <div class="items-section-title">Abilities</div>
+    <div class="ability-list">
+      ${abilities.map(a => `
+        <div class="ability-item">
+          <div class="ability-text">
+            <strong>${escapeHtml(a.item.ability.name)}</strong> <span class="muted">— ${escapeHtml(a.item.name)}</span><br>
+            <span class="muted">${escapeHtml((a.item.ability.description ? a.item.ability.description + " " : "") + "(" + abilityEffectText(a.item.ability) + ")")}</span>
+          </div>
+          <button class="btn small ${a.ready ? "" : "ghost"}" data-action="use-ability" data-id="${c.id}" data-item="${a.item.id}" ${(a.ready && !c.dead) ? "" : "disabled"}>
+            ${a.ready ? "Use" : "Ready in " + a.readyIn}</button>
+        </div>`).join("")}
+    </div>` : "";
 
   host.innerHTML = `
     <div class="detail-hero ${c.dead ? "is-dead" : ""}">
@@ -470,6 +528,8 @@ function renderDetail(charId) {
 
     <div class="items-section-title">In backpack</div>
     ${renderItemRow(c.inventory, "backpack", c.id, "Empty backpack.")}
+
+    ${abilitiesHtml}
 
     <div class="row-actions">
       <button class="btn ghost small" data-nav="players">← Back to characters</button>
@@ -643,6 +703,32 @@ function removeItem(charId, itemId) {
   toast(`Removed: ${resolveThing(itemId).name}`);
 }
 
+/* Trigger an item's active ability */
+function useAbility(charId, itemId) {
+  const c = byId(state.characters, charId);
+  if (!c) return;
+  if (c.dead) { toast("Dead characters can't act."); return; }
+  const it = byId(ITEMS, itemId);
+  if (!it || !it.ability) return;
+  const ab = it.ability;
+  c.cooldowns = c.cooldowns || {};
+  if ((c.cooldowns[itemId] || 0) > state.round) {
+    toast(`${ab.name}: ready in ${c.cooldowns[itemId] - state.round} round(s)`);
+    return;
+  }
+  if (ab.gold) c.gold += ab.gold;                    // may go negative
+  if (ab.drunkness) applyBuzzDelta(c, ab.drunkness);
+  if (ab.buff) {
+    const ex = c.activeBuffs.find(b => b.id === ab.buff.id);
+    if (ex) ex.questsRemaining = ab.buff.durationQuests;
+    else c.activeBuffs.push({ id: ab.buff.id, questsRemaining: ab.buff.durationQuests });
+  }
+  if (ab.cooldownRounds) c.cooldowns[itemId] = state.round + ab.cooldownRounds;
+  saveState();
+  refresh();
+  toast(`${c.name} used ${ab.name}`);
+}
+
 /* ============================== ADMIN DASHBOARD ======================== */
 
 function renderDM() {
@@ -702,6 +788,12 @@ function nextRound() {
   state.characters.forEach(c => {
     if (isFrozen(c)) return;   // paused / dead characters are unaffected
     applyBuzzDelta(c, -roundDrunknessDrop(c.buzz));
+    for (const id of c.equipped) {   // per-round item income / drain
+      const it = byId(ITEMS, id);
+      if (!it || !it.perRound) continue;
+      if (it.perRound.gold) c.gold += it.perRound.gold;               // may go negative
+      if (it.perRound.drunkness) applyBuzzDelta(c, it.perRound.drunkness);
+    }
   });
   saveState();
   refresh();
@@ -1177,7 +1269,9 @@ function wikiEntryHtml(key, id) {
         <div class="wiki-portrait item">${e.icon ? `<img src="${e.icon}" alt="">` : "▪"}</div>
         <div>
           <p><strong>Type:</strong> ${e.type}${EQUIPPABLE_TYPES.includes(e.type) ? " (equippable)" : " (consumable)"}</p>
-          <p><strong>Effect:</strong> ${describeThing(e.id)}</p>
+          <p><strong>Effect:</strong> ${effectStatText(e.effect)}</p>
+          ${e.perRound ? `<p><strong>Per round (equipped):</strong> ${perRoundText(e.perRound)}</p>` : ""}
+          ${e.ability ? `<p><strong>Active ability:</strong> ${escapeHtml(e.ability.name)}${e.ability.description ? " — " + escapeHtml(e.ability.description) : ""} <span class="muted">(${escapeHtml(abilityEffectText(e.ability))})</span></p>` : ""}
           <p><strong>Base value:</strong> ${e.value} 🪙</p>
         </div>
       </div>`;
@@ -1257,6 +1351,7 @@ function handleAction(action, el) {
     case "equip":          equipItem(id, el.dataset.item); break;
     case "unequip":        unequipItem(id, el.dataset.item); break;
     case "remove-item":    removeItem(id, el.dataset.item); break;
+    case "use-ability":    useAbility(id, el.dataset.item); break;
     case "reward":         openRewardModal(id); break;
     case "adjust":         openAdjustModal(id); break;
     case "edit-story":     openStoryModal(id); break;

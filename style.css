@@ -300,6 +300,15 @@ details.card summary { cursor: pointer; font-weight: 700; }
 }
 .quest-actions { display: flex; gap: .4rem; flex: 0 0 auto; }
 
+/* item active abilities */
+.ability-list { display: flex; flex-direction: column; gap: .6rem; }
+.ability-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  background: var(--panel); border: 1px solid var(--panel-br); border-radius: 12px;
+  padding: .7rem .9rem; backdrop-filter: blur(3px);
+}
+.ability-item .ability-text { min-width: 0; }
+
 /* -------------------------------------------------------- Tavernpedia ---- */
 /* floating launcher — same look as the nav buttons, pinned bottom-right */
 .floating-wiki {
