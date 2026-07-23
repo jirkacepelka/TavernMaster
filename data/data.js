@@ -116,38 +116,38 @@ const CLASSES = [
  *   gold/drunkness may be negative; buff = { id, name, statMods, durationQuests }.
  * ------------------------------------------------------------------------- */
 const ITEMS = [
-  { id: "sword_basic",       name: "Iron Sword",          type: "weapon",  effect: { str: 1 },         value: 10, icon: "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Cpath%20d='M7%2027l3-3%204%204-3%203H7v-4z'%20fill='%23a0785a'/%3E%3Cpath%20d='M12%2022L24%206l2%202L14%2024l-2-2z'%20fill='%23d6d6de'/%3E%3C/svg%3E" },
-  { id: "shield_wood",       name: "Wooden Shield",       type: "armor",   effect: { con: 1 },         value: 8,  icon: null },
-  { id: "staff_apprentice",  name: "Needlessly short rot", type: "weapon", effect: { int: 1 },         value: 12, icon: null },
-  { id: "dagger",            name: "Dagger",              type: "weapon",  effect: { dex: 1 },         value: 6,  icon: null },
-  { id: "mace",              name: "Mace",                type: "weapon",  effect: { str: 1 },         value: 9,  icon: null },
-  { id: "lockpicks",         name: "Lockpicks",           type: "tool",    effect: { dex: 1 },         value: 7,  icon: null },
-  { id: "amulet_luck",       name: "Amulet of Luck",      type: "trinket", effect: { dex: 1, int: 1 }, value: 25, icon: null },
+  { id: "sword_basic",       name: "Iron Sword",          type: "weapon",  effect: { str: 1 },         value: 10, icon: "assets/items/sword_basic.webp" },
+  { id: "shield_wood",       name: "Wooden Shield",       type: "armor",   effect: { con: 1 },         value: 8,  icon: "assets/items/shield_wood.webp" },
+  { id: "staff_apprentice",  name: "Needlessly short rot", type: "weapon", effect: { int: 1 },         value: 12, icon: "assets/items/staff_apprentice.webp" },
+  { id: "dagger",            name: "Dagger",              type: "weapon",  effect: { dex: 1 },         value: 6,  icon: "assets/items/dagger.webp" },
+  { id: "mace",              name: "Mace",                type: "weapon",  effect: { str: 1 },         value: 9,  icon: "assets/items/mace.webp" },
+  { id: "lockpicks",         name: "Lockpicks",           type: "tool",    effect: { dex: 1 },         value: 7,  icon: "assets/items/lockpicks.webp" },
+  { id: "amulet_luck",       name: "Amulet of Luck",      type: "trinket", effect: { dex: 1, int: 1 }, value: 25, icon: "assets/items/amulet_luck.webp" },
 
   /* per-round income / drain (while equipped) */
-  { id: "amulet_prosperity", name: "Amulet of Prosperity", type: "trinket", effect: null, value: 45, icon: null,
+  { id: "amulet_prosperity", name: "Amulet of Prosperity", type: "trinket", effect: null, value: 45, icon: "assets/items/amulet_prosperity.webp",
     perRound: { gold: 5 } },
 
   /* active abilities */
-  { id: "bottle_branik",     name: "Bottle of Braník",    type: "trinket", effect: null, value: 10, icon: null,
+  { id: "bottle_branik",     name: "Bottle of Braník",    type: "trinket", effect: null, value: 10, icon: "assets/items/bottle_branik.webp",
     description: "The owner of this item has the right to sell the contents of their bladder once per round in exchange for money from the underclass in the shady districts of the world of Tavern Master.",
     ability: { name: "Sell the Goods", description: "Sell to the underclass in the shady districts.", drunkness: -5, gold: 5, cooldownRounds: 2 } },
 
-  { id: "cursed_flask",      name: "Cursed Flask",        type: "trinket", effect: null, value: 3, icon: null,
+  { id: "cursed_flask",      name: "Cursed Flask",        type: "trinket", effect: null, value: 3, icon: "assets/items/cursed_flask.webp",
     description: "The best friend of the forever thirsty adventurer.",
     ability: { name: "Try Your Luck", description: "Once every 4 rounds, try your luck: the bartender may hand you a basic alcohol on a 50% dice roll. No automatic effect — it only triggers the cooldown.", cooldownRounds: 4 } },
 
-  { id: "flameblade_alcohol", name: "Alcohol Flame Blade", type: "weapon", value: 80, icon: null,
+  { id: "flameblade_alcohol", name: "Alcohol Flame Blade", type: "weapon", value: 80, icon: "assets/items/flameblade_alcohol.webp",
     effect: { str: 5 }, effectPct: { str: 30 }, perRound: { drunkness: -5 },
     description: "The Alcohol Flame Blade is a powerful item that draws its power from the alcohol coursing through its wielder's veins. Be warned: whoever wields the power of the Flame Blade is doomed to spend eternity drinking in a bar." }
 ];
 
 /* --------------------------------------------- ALCOHOL (common goods / rewards) - */
 const ALCOHOL = [
-  { id: "beer_light", name: "Light Beer",   buzzDelta: 8,  price: 5,  realWorldServing: "1 beer (0.3 l)" },
-  { id: "mead",       name: "Mead",         buzzDelta: 12, price: 8,  realWorldServing: "1 glass of mead (0.2 l)" },
-  { id: "wine_red",   name: "Red Wine",     buzzDelta: 14, price: 10, realWorldServing: "1 glass of wine (2 dl)" },
-  { id: "moonshine",  name: "Moonshine",    buzzDelta: 20, price: 12, realWorldServing: "1 shot (4 cl)" }
+  { id: "beer_light", name: "Light Beer",   buzzDelta: 8,  price: 5,  realWorldServing: "1 beer (0.3 l)", icon: "assets/items/beer_light.webp" },
+  { id: "mead",       name: "Mead",         buzzDelta: 12, price: 8,  realWorldServing: "1 glass of mead (0.2 l)", icon: "assets/items/mead.webp" },
+  { id: "wine_red",   name: "Red Wine",     buzzDelta: 14, price: 10, realWorldServing: "1 glass of wine (2 dl)", icon: "assets/items/wine_red.webp" },
+  { id: "moonshine",  name: "Moonshine",    buzzDelta: 20, price: 12, realWorldServing: "1 shot (4 cl)", icon: "assets/items/moonshine.webp" }
 ];
 
 /* -------------------------------------------------------- SPECIAL DRINKS - */

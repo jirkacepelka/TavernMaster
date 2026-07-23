@@ -1148,9 +1148,9 @@ function modsToText(mods) {
 function wikiThumb(key, e) {
   if (key === "races")
     return `<span class="wiki-thumb">${e.avatar ? `<img src="${e.avatar}" alt="">` : icon("user")}</span>`;
-  if (key === "items")
-    return e.icon ? `<span class="wiki-thumb"><img src="${e.icon}" alt=""></span>` : `<span class="wiki-thumb">${icon("box")}</span>`;
-  const catIcon = { classes: "hat", alcohol: "drink", special: "sparkles", quests: "scroll" }[key] || "box";
+  if (e.icon)
+    return `<span class="wiki-thumb"><img src="${e.icon}" alt=""></span>`;
+  const catIcon = { items: "box", classes: "hat", alcohol: "drink", special: "sparkles", quests: "scroll" }[key] || "box";
   return `<span class="wiki-thumb">${icon(catIcon)}</span>`;
 }
 
@@ -1332,16 +1332,20 @@ function wikiEntryHtml(key, id) {
         </div>
       </div>`;
   } else if (key === "alcohol") {
-    body = `<ul class="wiki-facts">
+    body = `<div class="wiki-entry-hero">
+      <div class="wiki-portrait item">${e.icon ? `<img src="${e.icon}" alt="">` : icon("drink")}</div>
+      <ul class="wiki-facts">
       <li><strong>Price:</strong> ${e.price} ${COIN}</li>
       <li><strong>Drunkness:</strong> +${e.buzzDelta}</li>
-      <li><strong>Real-world serving:</strong> ${icon("drink")} ${escapeHtml(e.realWorldServing)}</li></ul>`;
+      <li><strong>Real-world serving:</strong> ${icon("drink")} ${escapeHtml(e.realWorldServing)}</li></ul></div>`;
   } else if (key === "special") {
-    body = `<ul class="wiki-facts">
+    body = `<div class="wiki-entry-hero">
+      <div class="wiki-portrait item">${e.icon ? `<img src="${e.icon}" alt="">` : icon("sparkles")}</div>
+      <ul class="wiki-facts">
       <li><strong>Price:</strong> ${e.price} ${COIN}</li>
       <li><strong>Drunkness:</strong> ${e.buzzDelta >= 0 ? "+" : ""}${e.buzzDelta}</li>
       <li><strong>Buff:</strong> ${e.buff ? escapeHtml(e.buff.name) + " — " + modsToText(e.buff.statMods) + " (for " + e.buff.durationQuests + " quest/s)" : "—"}</li>
-      <li><strong>Real-world serving:</strong> ${icon("drink")} ${escapeHtml(e.realWorldServing)}</li></ul>`;
+      <li><strong>Real-world serving:</strong> ${icon("drink")} ${escapeHtml(e.realWorldServing)}</li></ul></div>`;
   } else if (key === "quests") {
     const s = questCompletion(e.id);
     const status = s.done
