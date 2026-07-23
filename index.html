@@ -12,6 +12,7 @@
     <nav class="top-nav">
       <button class="nav-btn" data-nav="players">Characters</button>
       <button class="nav-btn" data-nav="dm">Admin</button>
+      <button class="nav-btn" id="nav-wiki">Tavernpedia</button>
       <button class="nav-btn" data-nav="tavern">Tavern →</button>
     </nav>
   </header>
@@ -125,12 +126,11 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <!-- ============================================================== WIKI -->
-  <button id="wiki-fab" class="fab" title="Open the wiki">📖 Wiki</button>
+  <!-- ======================================================= TAVERNPEDIA -->
   <div id="wiki-overlay" class="wiki-overlay" hidden>
     <div class="wiki-fullscreen">
       <div class="wiki-topbar">
-        <div class="wiki-brand" data-action="wiki-home">📖 Tavern Master Wiki</div>
+        <div class="wiki-brand" data-action="wiki-home">📖 Tavernpedia</div>
         <button class="btn ghost small" id="wiki-close">Close ✕</button>
       </div>
       <div class="wiki-body">

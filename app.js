@@ -1056,7 +1056,7 @@ function wikiHomeHtml() {
 
   return `
     <div class="wiki-eyebrow">Documentation</div>
-    <h1 class="wiki-title">Tavern Master Wiki</h1>
+    <h1 class="wiki-title">Tavernpedia</h1>
     <div class="wiki-intro">
       <p>Tavern Master is a lightweight, browser-based DnD companion built around a tavern where the barkeep doubles as the Dungeon Master. Characters take on quests, drink to earn buffs (and debuffs), manage their gear, and sober up over rounds — all with no backend, saved right in your browser.</p>
       <p>This wiki is generated live from the game's data files. Every race, class, item, drink and quest here comes straight from <code>data/data.js</code> — add something there and it appears automatically.</p>
@@ -1180,7 +1180,7 @@ function init() {
     if (e.target.id === "modal-backdrop") closeModal();
   });
 
-  $("#wiki-fab").addEventListener("click", openWiki);
+  $("#nav-wiki").addEventListener("click", openWiki);
   $("#wiki-close").addEventListener("click", closeWiki);
   $("#wiki-overlay").addEventListener("click", (e) => {
     if (e.target.id === "wiki-overlay") closeWiki();
