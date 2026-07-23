@@ -933,9 +933,25 @@ function closeModal() {
   $("#modal-body").innerHTML = "";
 }
 
-/* ================================ WIKI ================================= */
-/* Renders everything from the data files. Reads the live global constants,
- * so anything the user adds to data/data.js shows up automatically. */
+/* ================================ WIKI =================================
+ * Fullscreen documentation. The contents index (right) and every detail page
+ * are generated live from the data files, so anything the user adds to
+ * data/data.js shows up automatically. */
+
+const GITHUB_URL = "https://github.com/jirkacepelka/TavernMaster";
+
+/* Categories — each reads a live global array of { id, name, ... } */
+const WIKI_CATS = [
+  { key: "races",   title: "Races",          desc: "Playable ancestries and their stat modifiers.", list: () => RACES },
+  { key: "classes", title: "Classes",        desc: "Roles, stat modifiers and starting gear.",      list: () => CLASSES },
+  { key: "items",   title: "Items",          desc: "Weapons, armor, tools and consumables.",         list: () => ITEMS },
+  { key: "alcohol", title: "Alcohol",        desc: "Common drinks sold and rewarded.",               list: () => ALCOHOL },
+  { key: "special", title: "Special drinks", desc: "Special brews with buffs and nerfs.",            list: () => SPECIAL_DRINKS },
+  { key: "quests",  title: "Quests",         desc: "Adventures the barkeep can hand out.",           list: () => allQuests() }
+];
+const wikiCat = key => WIKI_CATS.find(c => c.key === key);
+
+let wikiState = { view: "home", category: null, entryId: null };
 
 function modsToText(mods) {
   const s = Object.entries(mods || {})
@@ -945,57 +961,182 @@ function modsToText(mods) {
   return s || "—";
 }
 
-function wikiIcon(icon) {
-  return icon ? `<span class="shop-icon"><img src="${icon}" alt=""></span>` : `<span class="shop-icon empty"></span>`;
+function wikiThumb(key, e) {
+  if (key === "races")
+    return `<span class="wiki-thumb">${e.avatar ? `<img src="${e.avatar}" alt="">` : (RACE_EMOJI[e.id] || "🧑")}</span>`;
+  if (key === "items")
+    return e.icon ? `<span class="wiki-thumb"><img src="${e.icon}" alt=""></span>` : `<span class="wiki-thumb empty"></span>`;
+  return `<span class="wiki-thumb empty">${{ classes: "🎓", alcohol: "🍺", special: "🍹", quests: "📜" }[key] || ""}</span>`;
 }
 
-function renderWiki() {
-  const itemName = id => (byId(ITEMS, id) || {}).name || id;
-  const card = inner => `<div class="wiki-card">${inner}</div>`;
-  const section = (title, count, html) =>
-    `<section class="wiki-section"><h3>${title} <span class="muted">(${count})</span></h3>
-     <div class="wiki-grid">${html}</div></section>`;
-
-  const races = RACES.map(r => card(`
-    <span class="wiki-avatar">${r.avatar ? `<img src="${r.avatar}" alt="">` : (RACE_EMOJI[r.id] || "🧑")}</span>
-    <div><strong>${escapeHtml(r.name)}</strong><br>
-      <span class="muted">${escapeHtml(r.description || "")}</span><br>
-      <span class="wiki-mods">${modsToText(r.statMods)}</span></div>`)).join("");
-
-  const classes = CLASSES.map(c => card(`
-    <div><strong>${escapeHtml(c.name)}</strong><br>
-      <span class="wiki-mods">${modsToText(c.statMods)}</span><br>
-      <span class="muted">Start: ${(c.startingItems || []).map(itemName).join(", ") || "—"}</span></div>`)).join("");
-
-  const items = ITEMS.map(i => card(`
-    ${wikiIcon(i.icon)}
-    <div><strong>${escapeHtml(i.name)}</strong> <span class="muted">(${i.type})</span><br>
-      <span class="muted">${describeThing(i.id)} · value ${i.value} 🪙</span></div>`)).join("");
-
-  const alcohol = ALCOHOL.map(a => card(`
-    <div><strong>${escapeHtml(a.name)}</strong> — <span class="muted">${a.price} 🪙 · Drunkness +${a.buzzDelta}</span><br>
-      <span class="muted">🍹 ${escapeHtml(a.realWorldServing)}</span></div>`)).join("");
-
-  const special = SPECIAL_DRINKS.map(d => card(`
-    <div><strong>${escapeHtml(d.name)}</strong> — <span class="muted">${d.price} 🪙 · Drunkness ${d.buzzDelta >= 0 ? "+" : ""}${d.buzzDelta}</span><br>
-      <span class="muted">Buff: ${d.buff ? escapeHtml(d.buff.name) + " (" + modsToText(d.buff.statMods) + ", " + d.buff.durationQuests + "q)" : "—"}</span><br>
-      <span class="muted">🍹 ${escapeHtml(d.realWorldServing)}</span></div>`)).join("");
-
-  const quests = allQuests().map(q => card(`
-    <div><strong>${escapeHtml(q.name)}</strong><br>
-      <span class="muted">${escapeHtml(q.description || "")}</span></div>`)).join("");
-
-  $("#wiki-content").innerHTML =
-    section("Races", RACES.length, races) +
-    section("Classes", CLASSES.length, classes) +
-    section("Items", ITEMS.length, items) +
-    section("Alcohol", ALCOHOL.length, alcohol) +
-    section("Special drinks", SPECIAL_DRINKS.length, special) +
-    section("Quests", allQuests().length, quests);
+/* One-line summary used in lists */
+function wikiShort(key, e) {
+  if (key === "races" || key === "classes") return modsToText(e.statMods);
+  if (key === "items") return describeThing(e.id);
+  if (key === "alcohol") return `${e.price} 🪙 · Drunkness +${e.buzzDelta}`;
+  if (key === "special") return `${e.price} 🪙 · Drunkness ${e.buzzDelta >= 0 ? "+" : ""}${e.buzzDelta}`;
+  if (key === "quests") return e.description || "";
+  return "";
 }
 
-function openWiki() { renderWiki(); $("#wiki-overlay").hidden = false; }
+/* ---- navigation ---- */
+function wikiGo(view, category, entryId) {
+  wikiState = { view, category: category || null, entryId: entryId || null };
+  renderWikiMain();
+  renderWikiAside();
+  const main = $("#wiki-main");
+  if (main) main.scrollTop = 0;
+}
+
+function openWiki() {
+  if (wikiState.view !== "home" && wikiState.view !== "category" && wikiState.view !== "entry")
+    wikiState = { view: "home", category: null, entryId: null };
+  renderWikiMain();
+  renderWikiAside();
+  $("#wiki-overlay").hidden = false;
+}
 function closeWiki() { $("#wiki-overlay").hidden = true; }
+
+/* ---- right-hand contents index ---- */
+function renderWikiAside() {
+  const groups = WIKI_CATS.map(cat => {
+    const entries = cat.list();
+    const active = wikiState.category === cat.key;
+    const subs = entries.map(e => {
+      const on = wikiState.view === "entry" && wikiState.category === cat.key && wikiState.entryId === e.id;
+      return `<button class="wiki-link sub ${on ? "active" : ""}" data-action="wiki-entry" data-cat="${cat.key}" data-entry="${escapeHtml(e.id)}">${escapeHtml(e.name)}</button>`;
+    }).join("");
+    return `<div class="wiki-group">
+      <button class="wiki-link cat ${active ? "active" : ""}" data-action="wiki-cat" data-cat="${cat.key}">
+        ${cat.title}<span class="wiki-count">${entries.length}</span></button>
+      <div class="wiki-subs">${subs}</div>
+    </div>`;
+  }).join("");
+
+  $("#wiki-aside").innerHTML = `
+    <div class="wiki-aside-title">Contents</div>
+    <button class="wiki-link home ${wikiState.view === "home" ? "active" : ""}" data-action="wiki-home">Overview</button>
+    ${groups}`;
+}
+
+/* ---- breadcrumbs ---- */
+function wikiCrumbs(parts) {
+  return `<div class="wiki-crumbs">${parts.map((p, i) => {
+    const sep = i > 0 ? `<span class="sep">/</span>` : "";
+    if (p.action) return `${sep}<span class="crumb link" data-action="${p.action}"${p.cat ? ` data-cat="${p.cat}"` : ""}>${escapeHtml(p.label)}</span>`;
+    return `${sep}<span class="crumb">${escapeHtml(p.label)}</span>`;
+  }).join("")}</div>`;
+}
+
+/* ---- main pane ---- */
+function renderWikiMain() {
+  const host = $("#wiki-main");
+  if (wikiState.view === "category") host.innerHTML = wikiCategoryHtml(wikiState.category);
+  else if (wikiState.view === "entry") host.innerHTML = wikiEntryHtml(wikiState.category, wikiState.entryId);
+  else host.innerHTML = wikiHomeHtml();
+}
+
+function wikiHomeHtml() {
+  const cards = WIKI_CATS.map(cat => `
+    <button class="wiki-topic" data-action="wiki-cat" data-cat="${cat.key}">
+      <div class="wiki-topic-top"><strong>${cat.title}</strong><span class="wiki-count">${cat.list().length}</span></div>
+      <span class="muted">${cat.desc}</span>
+    </button>`).join("");
+
+  return `
+    <div class="wiki-eyebrow">Documentation</div>
+    <h1 class="wiki-title">Tavern Master Wiki</h1>
+    <div class="wiki-intro">
+      <p>Tavern Master is a lightweight, browser-based DnD companion built around a tavern where the barkeep doubles as the Dungeon Master. Characters take on quests, drink to earn buffs (and debuffs), manage their gear, and sober up over rounds — all with no backend, saved right in your browser.</p>
+      <p>This wiki is generated live from the game's data files. Every race, class, item, drink and quest here comes straight from <code>data/data.js</code> — add something there and it appears automatically.</p>
+    </div>
+
+    <div class="wiki-callout">
+      <div class="wiki-callout-label">Heads up</div>
+      <h2>A lot of this is vibecoded — and contributions are welcome</h2>
+      <p>A large part of this project was “vibecoded”: built by prompting an AI assistant rather than hand-writing every line. Expect rough edges and the occasional surprise.</p>
+      <p>Pull requests and commits are very welcome — new <strong>weapons &amp; items</strong>, <strong>characters</strong>, races, drinks, or whole <strong>features</strong>. The game content lives in <code>data/data.js</code> and is designed to be easy to extend.</p>
+      <a class="btn accent" href="${GITHUB_URL}" target="_blank" rel="noopener">Open the GitHub repo →</a>
+    </div>
+
+    <h2 class="wiki-browse-title">Browse</h2>
+    <div class="wiki-topics">${cards}</div>`;
+}
+
+function wikiCategoryHtml(key) {
+  const cat = wikiCat(key);
+  if (!cat) return wikiHomeHtml();
+  const entries = cat.list();
+  const cards = entries.map(e => `
+    <button class="wiki-entry-card" data-action="wiki-entry" data-cat="${key}" data-entry="${escapeHtml(e.id)}">
+      ${wikiThumb(key, e)}
+      <div class="wiki-entry-text"><strong>${escapeHtml(e.name)}</strong><span class="muted">${escapeHtml(wikiShort(key, e))}</span></div>
+    </button>`).join("");
+  return `
+    ${wikiCrumbs([{ label: "Overview", action: "wiki-home" }, { label: cat.title }])}
+    <h1 class="wiki-title">${cat.title} <span class="muted">(${entries.length})</span></h1>
+    <p class="muted wiki-cat-desc">${cat.desc}</p>
+    <div class="wiki-entry-grid">${cards || '<p class="empty">Nothing here yet.</p>'}</div>`;
+}
+
+function wikiEntryHtml(key, id) {
+  const cat = wikiCat(key);
+  if (!cat) return wikiHomeHtml();
+  const e = cat.list().find(x => x.id === id);
+  if (!e) return wikiCategoryHtml(key);
+
+  const crumbs = wikiCrumbs([
+    { label: "Overview", action: "wiki-home" },
+    { label: cat.title, action: "wiki-cat", cat: key },
+    { label: e.name }
+  ]);
+  const statTable = mods => {
+    const rows = STAT_KEYS.map(k => `<tr><td>${STAT_LABEL[k]}</td><td>${(mods && mods[k]) ? (mods[k] >= 0 ? "+" : "") + mods[k] : "0"}</td></tr>`).join("");
+    return `<table class="wiki-table"><thead><tr><th>Stat</th><th>Modifier</th></tr></thead><tbody>${rows}</tbody></table>`;
+  };
+
+  let body = "";
+  if (key === "races") {
+    body = `
+      <div class="wiki-entry-hero">
+        <div class="wiki-portrait">${e.avatar ? `<img src="${e.avatar}" alt="">` : (RACE_EMOJI[e.id] || "🧑")}</div>
+        <p>${escapeHtml(e.description || "")}</p>
+      </div>
+      <h2>Stat modifiers</h2>${statTable(e.statMods)}`;
+  } else if (key === "classes") {
+    const start = (e.startingItems || []).map(iid => {
+      const it = byId(ITEMS, iid);
+      return it ? `<button class="wiki-inline-link" data-action="wiki-entry" data-cat="items" data-entry="${it.id}">${escapeHtml(it.name)}</button>` : escapeHtml(iid);
+    }).join(", ") || "—";
+    body = `<h2>Stat modifiers</h2>${statTable(e.statMods)}<h2>Starting gear</h2><p>${start}</p>`;
+  } else if (key === "items") {
+    body = `
+      <div class="wiki-entry-hero">
+        <div class="wiki-portrait item">${e.icon ? `<img src="${e.icon}" alt="">` : "▪"}</div>
+        <div>
+          <p><strong>Type:</strong> ${e.type}${EQUIPPABLE_TYPES.includes(e.type) ? " (equippable)" : " (consumable)"}</p>
+          <p><strong>Effect:</strong> ${describeThing(e.id)}</p>
+          <p><strong>Base value:</strong> ${e.value} 🪙</p>
+        </div>
+      </div>`;
+  } else if (key === "alcohol") {
+    body = `<ul class="wiki-facts">
+      <li><strong>Price:</strong> ${e.price} 🪙</li>
+      <li><strong>Drunkness:</strong> +${e.buzzDelta}</li>
+      <li><strong>Real-world serving:</strong> 🍹 ${escapeHtml(e.realWorldServing)}</li></ul>`;
+  } else if (key === "special") {
+    body = `<ul class="wiki-facts">
+      <li><strong>Price:</strong> ${e.price} 🪙</li>
+      <li><strong>Drunkness:</strong> ${e.buzzDelta >= 0 ? "+" : ""}${e.buzzDelta}</li>
+      <li><strong>Buff:</strong> ${e.buff ? escapeHtml(e.buff.name) + " — " + modsToText(e.buff.statMods) + " (for " + e.buff.durationQuests + " quest/s)" : "—"}</li>
+      <li><strong>Real-world serving:</strong> 🍹 ${escapeHtml(e.realWorldServing)}</li></ul>`;
+  } else if (key === "quests") {
+    body = `<p>${escapeHtml(e.description || "")}</p>
+      <p class="muted">Rewards are handed out manually by the barkeep via the Reward button.</p>`;
+  }
+
+  return `${crumbs}<h1 class="wiki-title">${escapeHtml(e.name)}</h1><div class="wiki-article">${body}</div>`;
+}
 
 /* ================================ INIT ================================= */
 
@@ -1056,6 +1197,9 @@ function handleAction(action, el) {
     case "buy":            openBuyModal(el.dataset.item); break;
     case "next-round":     nextRound(); break;
     case "reset-game":     openResetModal(); break;
+    case "wiki-home":      wikiGo("home"); break;
+    case "wiki-cat":       wikiGo("category", el.dataset.cat); break;
+    case "wiki-entry":     wikiGo("entry", el.dataset.cat, el.dataset.entry); break;
   }
 }
 

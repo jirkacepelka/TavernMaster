@@ -128,12 +128,15 @@
   <!-- ============================================================== WIKI -->
   <button id="wiki-fab" class="fab" title="Open the wiki">📖 Wiki</button>
   <div id="wiki-overlay" class="wiki-overlay" hidden>
-    <div class="wiki-panel">
-      <div class="wiki-head">
-        <h2>📖 Wiki</h2>
+    <div class="wiki-fullscreen">
+      <div class="wiki-topbar">
+        <div class="wiki-brand" data-action="wiki-home">📖 Tavern Master Wiki</div>
         <button class="btn ghost small" id="wiki-close">Close ✕</button>
       </div>
-      <div id="wiki-content"></div>
+      <div class="wiki-body">
+        <main class="wiki-main" id="wiki-main"></main>
+        <aside class="wiki-aside" id="wiki-aside"></aside>
+      </div>
     </div>
   </div>
 
