@@ -22,7 +22,7 @@
     <section id="view-players" class="view">
       <div class="view-head">
         <h2>Characters</h2>
-        <button class="btn accent" data-nav="create">＋ New character</button>
+        <button class="btn accent" data-nav="create" data-icon="plus">New character</button>
       </div>
       <div id="players-list" class="stack"></div>
     </section>
@@ -72,11 +72,11 @@
           <div class="round-box">
             <span class="muted">Round</span>
             <strong id="round-count">1</strong>
-            <button class="btn accent small" data-action="next-round">Next round ⏭</button>
+            <button class="btn accent small" data-action="next-round" data-icon="skip">Next round</button>
           </div>
-          <button class="btn small" id="btn-export">⬇️ Export</button>
-          <button class="btn small ghost" id="btn-import">⬆️ Import</button>
-          <button class="btn small danger" data-action="reset-game">♻️ Reset game</button>
+          <button class="btn small" id="btn-export" data-icon="download">Export</button>
+          <button class="btn small ghost" id="btn-import" data-icon="upload">Import</button>
+          <button class="btn small danger" data-action="reset-game" data-icon="refresh">Reset game</button>
           <input type="file" id="import-file" accept=".dnd,application/json" hidden>
         </div>
       </div>
@@ -90,13 +90,13 @@
           <h3>Quests</h3>
           <div id="dm-quests" class="stack"></div>
           <details class="card">
-            <summary>➕ Add custom quest</summary>
+            <summary data-icon="plus">Add custom quest</summary>
             <form id="quest-form" class="stack">
               <label>Name <input type="text" id="q-name" autocomplete="off"></label>
               <label>Description <textarea id="q-desc" rows="2"></textarea></label>
               <button type="submit" class="btn small">Add quest</button>
             </form>
-            <p class="muted">Quests are text only — hand out rewards manually with the 🎁 Reward button on a character.</p>
+            <p class="muted">Quests are text only — hand out rewards manually with the Reward button on a character.</p>
           </details>
         </div>
       </div>
@@ -104,7 +104,7 @@
 
     <!-- =========================================================== TAVERN -->
     <section id="view-tavern" class="view">
-      <h2>🍻 Tavern</h2>
+      <h2>Tavern</h2>
       <p class="muted">Full catalog. The DM sets the price when you hit Buy — it's deducted from the selected character's gold and goes to their backpack.</p>
       <label class="inline">Character:
         <select id="tavern-character"></select>
@@ -126,11 +126,11 @@
   <div id="toast" class="toast" hidden></div>
 
   <!-- ======================================================= TAVERNPEDIA -->
-  <button class="nav-btn floating-wiki" id="nav-wiki">📖 Tavernpedia</button>
+  <button class="nav-btn floating-wiki" id="nav-wiki" data-icon="book">Tavernpedia</button>
   <div id="wiki-overlay" class="wiki-overlay" hidden>
     <div class="wiki-fullscreen">
       <div class="wiki-topbar">
-        <div class="wiki-brand" data-action="wiki-home">📖 Tavernpedia</div>
+        <div class="wiki-brand" data-action="wiki-home" data-icon="book">Tavernpedia</div>
         <button class="btn ghost small" id="wiki-close">Close ✕</button>
       </div>
       <div class="wiki-body">

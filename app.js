@@ -15,13 +15,45 @@ const EQUIPPABLE_TYPES = ["weapon", "armor", "trinket", "tool"];
 /* Keys that feed into a character's stats */
 const STAT_KEYS = ["str", "dex", "int", "con"];
 const STAT_LABEL = { str: "Strength", dex: "Dexterity", int: "Intelligence", con: "Constitution", def: "Defense", heal: "Healing" };
-const RACE_EMOJI = { human: "🧑", elf: "🧝", dwarf: "🧔", orc: "👹", tauren: "🐂", goblin: "👺", murlock: "🐟" };
+/* ---- inline SVG icons (Feather/Lucide style, open-source, no deps) ---- */
+const ICONS = {
+  drink:'<path d="M8 22h8M12 15v7M12 15a5 5 0 0 0 5-5c0-2-.5-4-1-7H8c-.5 3-1 5-1 7a5 5 0 0 0 5 5Z"/>',
+  camera:'<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3"/>',
+  pencil:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+  gift:'<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/>',
+  sliders:'<line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="1" x2="7" y1="14" y2="14"/><line x1="9" x2="15" y1="8" y2="8"/><line x1="17" x2="23" y1="16" y2="16"/>',
+  trash:'<path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>',
+  pause:'<rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/>',
+  play:'<polygon points="6 3 20 12 6 21 6 3"/>',
+  skull:'<circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M8 20v2h8v-2"/><path d="M16 20a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20"/>',
+  heart:'<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/>',
+  coin:'<circle cx="12" cy="12" r="9"/><path d="M14.8 9A2 2 0 0 0 13 8h-2a2 2 0 0 0 0 4h2a2 2 0 0 1 0 4h-2a2 2 0 0 1-1.8-1"/><path d="M12 6v2m0 8v2"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
+  upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>',
+  refresh:'<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
+  skip:'<polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/>',
+  book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+  alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/>',
+  sparkles:'<path d="m12 3 1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3z"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>',
+  chevronRight:'<path d="m9 18 6-6-6-6"/>',
+  x:'<path d="M18 6 6 18M6 6l12 12"/>',
+  user:'<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  box:'<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+  scroll:'<path d="M8 3H5a2 2 0 0 0-2 2v3M8 3v14a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8M8 3h11a2 2 0 0 1 2 2v3M3 8h5"/>',
+  hat:'<path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1 2 2 6 2s6-1 6-2v-5"/>'
+};
+function icon(name, cls) {
+  return `<svg class="ic${cls ? " " + cls : ""}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ""}</svg>`;
+}
+const COIN = icon("coin", "coin");
 
-/* Avatar inner content: character image → race image → emoji fallback */
+/* Avatar inner content: character image → race image → user-icon fallback */
 function avatarHtml(c) {
   const src = c.avatar || (byId(RACES, c.raceId) || {}).avatar;
   if (src) return `<img src="${src}" alt="">`;
-  return RACE_EMOJI[c.raceId] || "🧑";
+  return icon("user", "avatar-fallback");
 }
 
 /* ------------------------------------------------------------- helpers --- */
@@ -268,14 +300,14 @@ function effectStatText(effect) {
 function perRoundText(p) {
   if (!p) return "";
   const parts = [];
-  if (p.gold) parts.push(`${p.gold >= 0 ? "+" : ""}${p.gold} 🪙`);
+  if (p.gold) parts.push(`${p.gold >= 0 ? "+" : ""}${p.gold} g`);
   if (p.drunkness) parts.push(`${p.drunkness >= 0 ? "+" : ""}${p.drunkness}% drunkness`);
   return parts.join(", ");
 }
 function abilityEffectText(ab) {
   if (!ab) return "";
   const parts = [];
-  if (ab.gold) parts.push(`${ab.gold >= 0 ? "+" : ""}${ab.gold} 🪙`);
+  if (ab.gold) parts.push(`${ab.gold >= 0 ? "+" : ""}${ab.gold} g`);
   if (ab.drunkness) parts.push(`${ab.drunkness >= 0 ? "+" : ""}${ab.drunkness}% drunkness`);
   if (ab.buff) parts.push(`buff ${ab.buff.name} (${modsToText(ab.buff.statMods)})`);
   let s = parts.join(", ") || "—";
@@ -335,7 +367,7 @@ function renderBuzz(character) {
   return `
     <div class="buzz-wrap">
       <div class="buzz-head">Drunkness — ${zoneLabel}
-        ${debuff ? `<span class="badge debuff zone-badge" title="${debuff.desc}">⚠ ${debuff.name}</span>` : ""}</div>
+        ${debuff ? `<span class="badge debuff zone-badge" title="${escapeHtml(debuff.desc)}">${icon("alert")} ${debuff.name}</span>` : ""}</div>
       <div class="buzz-bar">
         <div class="buzz-fill" style="width:${character.buzz}%"></div>
         <span class="buzz-pct">${character.buzz}%</span>
@@ -351,7 +383,7 @@ function renderBuffBadges(character) {
     const name = def ? def.name : ab.id;
     const modsStr = def ? Object.entries(def.statMods)
       .map(([k, v]) => `${STAT_LABEL[k] || k} ${v >= 0 ? "+" : ""}${v}`).join(", ") : "";
-    return `<span class="badge buff">✨ ${name} (${modsStr}) — ${ab.questsRemaining} q left</span>`;
+    return `<span class="badge buff">${icon("sparkles")} ${name} (${modsStr}) — ${ab.questsRemaining} q left</span>`;
   }).join("");
 }
 
@@ -438,7 +470,7 @@ function renderStatPills(eff, base) {
 function renderPlayers() {
   const wrap = $("#players-list");
   if (!state.characters.length) {
-    wrap.innerHTML = `<p class="empty">No characters yet. Create the first one with the "＋ New character" button.</p>`;
+    wrap.innerHTML = `<p class="empty">No characters yet. Create the first one with the “New character” button.</p>`;
     return;
   }
   wrap.innerHTML = state.characters.map(c => {
@@ -448,8 +480,8 @@ function renderPlayers() {
       <div class="avatar sm">${avatarHtml(c)}</div>
       <div class="row-main">
         <div class="row-name">${escapeHtml(c.name)}
-          ${c.dead ? '<span class="badge dead">☠ Dead</span>' : ""}
-          ${c.paused ? '<span class="badge paused">⏸ Paused</span>' : ""}</div>
+          ${c.dead ? `<span class="badge dead">${icon("skull")} Dead</span>` : ""}
+          ${c.paused ? `<span class="badge paused">${icon("pause")} Paused</span>` : ""}</div>
         <div class="tag-row">
           <span class="badge pill">${cls ? cls.name : "?"}</span>
           <span class="badge pill">${race ? race.name : "?"}</span>
@@ -459,8 +491,8 @@ function renderPlayers() {
         <div class="mini-bar"><div class="buzz-fill ${zone}" style="width:${c.buzz}%"></div></div>
         <span class="muted">${c.buzz}% drunkness</span>
       </div>
-      <div class="row-gold gold-pill">${c.gold} 🪙</div>
-      <div class="row-arrow">›</div>
+      <div class="row-gold gold-pill">${c.gold} ${COIN}</div>
+      <div class="row-arrow">${icon("chevronRight")}</div>
     </div>`;
   }).join("");
 }
@@ -494,19 +526,19 @@ function renderDetail(charId) {
     <div class="detail-hero ${c.dead ? "is-dead" : ""}">
       <div class="avatar-wrap">
         <div class="avatar">${avatarHtml(c)}</div>
-        <button class="btn ghost small avatar-edit-btn" data-action="edit-avatar" data-id="${c.id}">✏️ Image</button>
+        <button class="avatar-edit-fab" data-action="edit-avatar" data-id="${c.id}" title="Change image" aria-label="Change image">${icon("camera")}</button>
       </div>
       <div class="hero-info">
         <div class="hero-top">
           <div class="char-name">${escapeHtml(c.name)}</div>
-          <button class="btn" data-action="drink" data-id="${c.id}" ${c.dead ? "disabled" : ""}>🍷 Drink</button>
+          <button class="btn" data-action="drink" data-id="${c.id}" ${c.dead ? "disabled" : ""}>${icon("drink")} Drink</button>
         </div>
         <div class="tag-row">
           <span class="badge pill">${cls ? cls.name : "?"}</span>
           <span class="badge pill">${race ? race.name : "?"}</span>
-          <span class="badge neutral"><span class="gold-pill">${c.gold} 🪙</span></span>
-          ${c.dead ? '<span class="badge dead">☠ Dead</span>' : ""}
-          ${c.paused ? '<span class="badge paused">⏸ Paused</span>' : ""}
+          <span class="badge neutral"><span class="gold-pill">${c.gold} ${COIN}</span></span>
+          ${c.dead ? `<span class="badge dead">${icon("skull")} Dead</span>` : ""}
+          ${c.paused ? `<span class="badge paused">${icon("pause")} Paused</span>` : ""}
         </div>
         <div class="stat-line">
           <span class="lbl">Stats:</span>
@@ -518,7 +550,7 @@ function renderDetail(charId) {
     </div>
 
     <div class="items-section-title">Story
-      <button class="btn ghost small" data-action="edit-story" data-id="${c.id}">✏️ Edit</button></div>
+      <button class="icon-btn" data-action="edit-story" data-id="${c.id}" title="Edit story" aria-label="Edit story">${icon("pencil")}</button></div>
     <div class="story-box">${c.story
       ? escapeHtml(c.story).replace(/\n/g, "<br>")
       : '<span class="muted">No story yet. Click Edit to write one.</span>'}</div>
@@ -532,9 +564,9 @@ function renderDetail(charId) {
     ${abilitiesHtml}
 
     <div class="row-actions">
-      <button class="btn ghost small" data-nav="players">← Back to characters</button>
-      <button class="btn ghost small" data-action="toggle-pause" data-id="${c.id}">${c.paused ? "▶ Resume" : "⏸ Pause"}</button>
-      <button class="btn ${c.dead ? "ghost" : "danger"} small" data-action="toggle-dead" data-id="${c.id}">${c.dead ? "✚ Revive" : "☠ Kill"}</button>
+      <button class="btn ghost small" data-nav="players">${icon("chevronRight", "flip")} Back to characters</button>
+      <button class="btn ghost small" data-action="toggle-pause" data-id="${c.id}">${c.paused ? icon("play") + " Resume" : icon("pause") + " Pause"}</button>
+      <button class="btn ${c.dead ? "ghost" : "danger"} small" data-action="toggle-dead" data-id="${c.id}">${c.dead ? icon("heart") + " Revive" : icon("skull") + " Kill"}</button>
     </div>`;
 }
 
@@ -585,7 +617,7 @@ function openDrinkModal(charId) {
     return `
       <p><strong>Drunkness:</strong> ${d.buzzDelta >= 0 ? "+" : ""}${d.buzzDelta}</p>
       <p><strong>Buff/nerf:</strong> ${d.buff ? d.buff.name + " — " + buff : "none"}</p>
-      <p class="badge neutral">🍹 Actually drink: ${escapeHtml(d.realWorldServing || "?")}</p>`;
+      <p class="badge neutral">${icon("drink")} Actually drink: ${escapeHtml(d.realWorldServing || "?")}</p>`;
   };
 
   openModal("Drink", `
@@ -598,7 +630,7 @@ function openDrinkModal(charId) {
     </label>
     <div id="drink-details">${detailsFor(($("#drink-select") || {}).value || (defaultSource === "inventory" ? invDrinks[0] : allDrinks()[0].id))}</div>
     <label class="inline" style="margin-top:.8rem">
-      <input type="checkbox" id="drink-consumed"> Drank it IRL ✅
+      <input type="checkbox" id="drink-consumed"> Drank it IRL
     </label>
   `, [
     { label: "Apply", primary: true, onClick: () => {
@@ -628,9 +660,9 @@ function drinkItemFromInventory(charId, id) {
   if (!c) return;
   const d = resolveThing(id);
   openModal(`Drink: ${d.name}`, `
-    <p class="badge neutral">🍹 Actually drink: ${escapeHtml(d.realWorldServing || "?")}</p>
+    <p class="badge neutral">${icon("drink")} Actually drink: ${escapeHtml(d.realWorldServing || "?")}</p>
     <p class="muted">Drunkness ${d.buzzDelta >= 0 ? "+" : ""}${d.buzzDelta}${d.buff ? ", buff " + d.buff.name : ""}</p>
-    <label class="inline"><input type="checkbox" id="drink-consumed"> Drank it IRL ✅</label>
+    <label class="inline"><input type="checkbox" id="drink-consumed"> Drank it IRL</label>
   `, [
     { label: "Apply", primary: true, onClick: () => {
         if (!$("#drink-consumed").checked) { toast("Check 'Drank it' first."); return false; }
@@ -747,14 +779,14 @@ function renderDMCharacters() {
     <div class="card" data-id="${c.id}">
       <div class="char-top">
         <span class="char-name sm">${escapeHtml(c.name)}</span>
-        <span class="char-meta gold-pill">${c.gold} 🪙</span>
+        <span class="char-meta gold-pill">${c.gold} ${COIN}</span>
       </div>
       ${renderBuzz(c)}
       <div class="row-actions">
         <button class="btn small ghost" data-action="open-detail" data-id="${c.id}">Detail</button>
-        <button class="btn small" data-action="reward" data-id="${c.id}">🎁 Reward</button>
-        <button class="btn small ghost" data-action="adjust" data-id="${c.id}">🛠 Edit</button>
-        <button class="btn small danger" data-action="delete-char" data-id="${c.id}">🗑</button>
+        <button class="btn small" data-action="reward" data-id="${c.id}">${icon("gift")} Reward</button>
+        <button class="btn small ghost" data-action="adjust" data-id="${c.id}">${icon("sliders")} Edit</button>
+        <button class="btn small danger icon-only" data-action="delete-char" data-id="${c.id}" title="Delete" aria-label="Delete">${icon("trash")}</button>
       </div>
     </div>`).join("");
 }
@@ -769,14 +801,14 @@ function renderDMQuests() {
     const custom = String(q.id).startsWith("cq-");
     return `<div class="quest-item ${done ? "completed" : ""}">
       <div class="info">
-        <strong>${escapeHtml(q.name)}</strong> ${done ? "✅" : ""}<br>
+        <strong>${escapeHtml(q.name)}</strong> ${done ? icon("check", "ok") : ""}<br>
         <span class="muted">${escapeHtml(q.description || "")}</span>
       </div>
       <div class="quest-actions">
         ${done
           ? `<button class="btn small ghost" data-action="reopen-quest" data-quest="${q.id}">Reopen</button>`
           : `<button class="btn small" data-action="complete-quest" data-quest="${q.id}">Complete</button>`}
-        ${custom ? `<button class="btn small danger" data-action="delete-quest" data-quest="${q.id}">🗑</button>` : ""}
+        ${custom ? `<button class="btn small danger icon-only" data-action="delete-quest" data-quest="${q.id}" title="Delete" aria-label="Delete">${icon("trash")}</button>` : ""}
       </div>
     </div>`;
   }).join("");
@@ -800,7 +832,7 @@ function nextRound() {
   toast(`Round ${state.round} — characters sobered up a bit`);
 }
 
-/* Mark a quest completed. Rewards are handed out separately via 🎁 Reward.
+/* Mark a quest completed. Rewards are handed out separately via the Reward button.
  * Completing a quest ticks every character's quest-scoped buffs by one. */
 function completeQuest(questId) {
   const q = byId(allQuests(), questId);
@@ -924,7 +956,7 @@ function renderTavern() {
   const sel = $("#tavern-character");
   const prev = sel.value;
   sel.innerHTML = state.characters.length
-    ? state.characters.map(c => `<option value="${c.id}">${escapeHtml(c.name)} (${c.gold} 🪙)</option>`).join("")
+    ? state.characters.map(c => `<option value="${c.id}">${escapeHtml(c.name)} (${c.gold} g)</option>`).join("")
     : `<option value="">— no character —</option>`;
   if (prev && state.characters.some(c => c.id === prev)) sel.value = prev;
 
@@ -942,7 +974,7 @@ function renderTavern() {
         </div>
       </div>
       <div class="shop-buy">
-        <span class="muted">~${suggestedPrice(t)} 🪙</span>
+        <span class="muted">~${suggestedPrice(t)} ${COIN}</span>
         <button class="btn small" data-action="buy" data-item="${t.id}">Buy</button>
       </div>
     </div>`;
@@ -955,7 +987,7 @@ function openBuyModal(id) {
   if (!c) { toast("Select a character."); return; }
   const t = resolveThing(id);
   openModal(`Buy: ${t.name}`, `
-    <p class="muted">Buyer: ${escapeHtml(c.name)} — ${c.gold} 🪙</p>
+    <p class="muted">Buyer: ${escapeHtml(c.name)} — ${c.gold} ${COIN}</p>
     <label>Price — set by the DM
       <input type="number" id="buy-price" value="${suggestedPrice(t)}" min="0">
     </label>
@@ -967,7 +999,7 @@ function openBuyModal(id) {
         c.inventory.push(t.id);       // purchase goes to the backpack
         saveState();
         renderTavern();
-        toast(`${c.name} bought ${t.name} for ${price} 🪙`);
+        toast(`${c.name} bought ${t.name} for ${price} gold`);
         return true;
       }
     },
@@ -1093,18 +1125,19 @@ function modsToText(mods) {
 
 function wikiThumb(key, e) {
   if (key === "races")
-    return `<span class="wiki-thumb">${e.avatar ? `<img src="${e.avatar}" alt="">` : (RACE_EMOJI[e.id] || "🧑")}</span>`;
+    return `<span class="wiki-thumb">${e.avatar ? `<img src="${e.avatar}" alt="">` : icon("user")}</span>`;
   if (key === "items")
-    return e.icon ? `<span class="wiki-thumb"><img src="${e.icon}" alt=""></span>` : `<span class="wiki-thumb empty"></span>`;
-  return `<span class="wiki-thumb empty">${{ classes: "🎓", alcohol: "🍺", special: "🍹", quests: "📜" }[key] || ""}</span>`;
+    return e.icon ? `<span class="wiki-thumb"><img src="${e.icon}" alt=""></span>` : `<span class="wiki-thumb">${icon("box")}</span>`;
+  const catIcon = { classes: "hat", alcohol: "drink", special: "sparkles", quests: "scroll" }[key] || "box";
+  return `<span class="wiki-thumb">${icon(catIcon)}</span>`;
 }
 
 /* One-line summary used in lists */
 function wikiShort(key, e) {
   if (key === "races" || key === "classes") return modsToText(e.statMods);
   if (key === "items") return describeThing(e.id);
-  if (key === "alcohol") return `${e.price} 🪙 · Drunkness +${e.buzzDelta}`;
-  if (key === "special") return `${e.price} 🪙 · Drunkness ${e.buzzDelta >= 0 ? "+" : ""}${e.buzzDelta}`;
+  if (key === "alcohol") return `${e.price} ${COIN} · Drunkness +${e.buzzDelta}`;
+  if (key === "special") return `${e.price} ${COIN} · Drunkness ${e.buzzDelta >= 0 ? "+" : ""}${e.buzzDelta}`;
   if (key === "quests") {
     const s = questCompletion(e.id);
     if (s.done) return s.round != null ? `✓ Completed · round ${s.round}` : "✓ Completed";
@@ -1253,7 +1286,7 @@ function wikiEntryHtml(key, id) {
   if (key === "races") {
     body = `
       <div class="wiki-entry-hero">
-        <div class="wiki-portrait">${e.avatar ? `<img src="${e.avatar}" alt="">` : (RACE_EMOJI[e.id] || "🧑")}</div>
+        <div class="wiki-portrait">${e.avatar ? `<img src="${e.avatar}" alt="">` : icon("user")}</div>
         <p>${escapeHtml(e.description || "")}</p>
       </div>
       <h2>Stat modifiers</h2>${statTable(e.statMods)}`;
@@ -1266,26 +1299,26 @@ function wikiEntryHtml(key, id) {
   } else if (key === "items") {
     body = `
       <div class="wiki-entry-hero">
-        <div class="wiki-portrait item">${e.icon ? `<img src="${e.icon}" alt="">` : "▪"}</div>
+        <div class="wiki-portrait item">${e.icon ? `<img src="${e.icon}" alt="">` : icon("box")}</div>
         <div>
           <p><strong>Type:</strong> ${e.type}${EQUIPPABLE_TYPES.includes(e.type) ? " (equippable)" : " (consumable)"}</p>
           <p><strong>Effect:</strong> ${effectStatText(e.effect)}</p>
           ${e.perRound ? `<p><strong>Per round (equipped):</strong> ${perRoundText(e.perRound)}</p>` : ""}
           ${e.ability ? `<p><strong>Active ability:</strong> ${escapeHtml(e.ability.name)}${e.ability.description ? " — " + escapeHtml(e.ability.description) : ""} <span class="muted">(${escapeHtml(abilityEffectText(e.ability))})</span></p>` : ""}
-          <p><strong>Base value:</strong> ${e.value} 🪙</p>
+          <p><strong>Base value:</strong> ${e.value} ${COIN}</p>
         </div>
       </div>`;
   } else if (key === "alcohol") {
     body = `<ul class="wiki-facts">
-      <li><strong>Price:</strong> ${e.price} 🪙</li>
+      <li><strong>Price:</strong> ${e.price} ${COIN}</li>
       <li><strong>Drunkness:</strong> +${e.buzzDelta}</li>
-      <li><strong>Real-world serving:</strong> 🍹 ${escapeHtml(e.realWorldServing)}</li></ul>`;
+      <li><strong>Real-world serving:</strong> ${icon("drink")} ${escapeHtml(e.realWorldServing)}</li></ul>`;
   } else if (key === "special") {
     body = `<ul class="wiki-facts">
-      <li><strong>Price:</strong> ${e.price} 🪙</li>
+      <li><strong>Price:</strong> ${e.price} ${COIN}</li>
       <li><strong>Drunkness:</strong> ${e.buzzDelta >= 0 ? "+" : ""}${e.buzzDelta}</li>
       <li><strong>Buff:</strong> ${e.buff ? escapeHtml(e.buff.name) + " — " + modsToText(e.buff.statMods) + " (for " + e.buff.durationQuests + " quest/s)" : "—"}</li>
-      <li><strong>Real-world serving:</strong> 🍹 ${escapeHtml(e.realWorldServing)}</li></ul>`;
+      <li><strong>Real-world serving:</strong> ${icon("drink")} ${escapeHtml(e.realWorldServing)}</li></ul>`;
   } else if (key === "quests") {
     const s = questCompletion(e.id);
     const status = s.done
@@ -1304,6 +1337,9 @@ function wikiEntryHtml(key, id) {
 function init() {
   loadState();
   fillCreateDropdowns();
+
+  // inject SVG icons into static markup (buttons/headings with data-icon)
+  $$("[data-icon]").forEach(el => el.insertAdjacentHTML("afterbegin", icon(el.dataset.icon) + " "));
 
   document.body.addEventListener("click", (e) => {
     const navEl = e.target.closest("[data-nav]");
