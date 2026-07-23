@@ -298,7 +298,12 @@ details.card summary { cursor: pointer; font-weight: 700; }
 .fab:hover { background: var(--accent-dim); color: #fff; }
 
 /* ---- fullscreen wiki ---- */
-.wiki-overlay { position: fixed; inset: 0; z-index: 55; background: #0e0b09; }
+.wiki-overlay {
+  position: fixed; inset: 0; z-index: 55;
+  background:
+    linear-gradient(rgba(18, 18, 18, .92), rgba(18, 18, 18, .94)),
+    url("assets/bg.webp") center/cover no-repeat fixed;
+}
 .wiki-overlay[hidden] { display: none; }
 .wiki-fullscreen { display: flex; flex-direction: column; height: 100%; }
 .wiki-topbar {
@@ -386,10 +391,18 @@ details.card summary { cursor: pointer; font-weight: 700; }
 }
 .wiki-link:hover { color: var(--ink); background: rgba(255,255,255,.04); }
 .wiki-link.active { color: var(--ink); background: rgba(201,52,56,.15); }
-.wiki-link.cat { font-weight: 700; color: var(--ink); margin-top: .5rem; }
-.wiki-link.sub { padding-left: 1.2rem; font-size: .84rem; }
+.wiki-cat-row { display: flex; align-items: center; gap: .1rem; margin-top: .3rem; border-radius: 6px; }
+.wiki-cat-row.active { background: rgba(201,52,56,.14); }
+.wiki-caret {
+  flex: 0 0 auto; background: none; border: none; color: var(--ink-muted); cursor: pointer;
+  font-size: .7rem; padding: .4rem .35rem; line-height: 1; transition: transform .12s;
+}
+.wiki-group.open .wiki-caret { transform: rotate(90deg); }
+.wiki-link.cat { font-weight: 700; color: var(--ink); flex: 1 1 auto; }
+.wiki-link.sub { padding-left: 1.5rem; font-size: .84rem; }
 .wiki-count { color: var(--ink-muted); font-size: .78rem; font-weight: 700; }
-.wiki-subs { display: flex; flex-direction: column; }
+.wiki-subs { display: none; flex-direction: column; }
+.wiki-group.open .wiki-subs { display: flex; }
 
 /* ------------------------------------------------------------- responsive - */
 @media (max-width: 760px) {

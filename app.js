@@ -952,6 +952,7 @@ const WIKI_CATS = [
 const wikiCat = key => WIKI_CATS.find(c => c.key === key);
 
 let wikiState = { view: "home", category: null, entryId: null };
+let wikiOpen = new Set();   /* expanded categories in the index (collapsed by default) */
 
 function modsToText(mods) {
   const s = Object.entries(mods || {})
@@ -982,10 +983,17 @@ function wikiShort(key, e) {
 /* ---- navigation ---- */
 function wikiGo(view, category, entryId) {
   wikiState = { view, category: category || null, entryId: entryId || null };
+  if (category) wikiOpen.add(category);   /* auto-expand the active category */
   renderWikiMain();
   renderWikiAside();
   const main = $("#wiki-main");
   if (main) main.scrollTop = 0;
+}
+
+function wikiToggle(key) {
+  if (wikiOpen.has(key)) wikiOpen.delete(key);
+  else wikiOpen.add(key);
+  renderWikiAside();
 }
 
 function openWiki() {
@@ -1002,13 +1010,16 @@ function renderWikiAside() {
   const groups = WIKI_CATS.map(cat => {
     const entries = cat.list();
     const active = wikiState.category === cat.key;
+    const open = wikiOpen.has(cat.key);
     const subs = entries.map(e => {
       const on = wikiState.view === "entry" && wikiState.category === cat.key && wikiState.entryId === e.id;
       return `<button class="wiki-link sub ${on ? "active" : ""}" data-action="wiki-entry" data-cat="${cat.key}" data-entry="${escapeHtml(e.id)}">${escapeHtml(e.name)}</button>`;
     }).join("");
-    return `<div class="wiki-group">
-      <button class="wiki-link cat ${active ? "active" : ""}" data-action="wiki-cat" data-cat="${cat.key}">
-        ${cat.title}<span class="wiki-count">${entries.length}</span></button>
+    return `<div class="wiki-group ${open ? "open" : ""}">
+      <div class="wiki-cat-row ${active ? "active" : ""}">
+        <button class="wiki-caret" data-action="wiki-toggle" data-cat="${cat.key}" aria-label="Toggle">▸</button>
+        <button class="wiki-link cat" data-action="wiki-cat" data-cat="${cat.key}">${cat.title}<span class="wiki-count">${entries.length}</span></button>
+      </div>
       <div class="wiki-subs">${subs}</div>
     </div>`;
   }).join("");
@@ -1200,6 +1211,7 @@ function handleAction(action, el) {
     case "wiki-home":      wikiGo("home"); break;
     case "wiki-cat":       wikiGo("category", el.dataset.cat); break;
     case "wiki-entry":     wikiGo("entry", el.dataset.cat, el.dataset.entry); break;
+    case "wiki-toggle":    wikiToggle(el.dataset.cat); break;
   }
 }
 
