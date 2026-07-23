@@ -334,7 +334,7 @@ details.card summary { cursor: pointer; font-weight: 700; }
 
 /* main content */
 .wiki-eyebrow { color: var(--accent); font-weight: 800; font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; margin-bottom: .5rem; }
-.wiki-title { font-family: Georgia, "Times New Roman", serif; font-size: 2.4rem; margin: 0 0 1rem; }
+.wiki-title { font-size: 2.4rem; margin: 0 0 1rem; letter-spacing: -.02em; }
 .wiki-intro p { color: var(--ink-muted); margin: 0 0 .8rem; }
 .wiki-main code { background: rgba(255,255,255,.08); padding: .1rem .35rem; border-radius: 4px; font-size: .85em; }
 .wiki-callout {

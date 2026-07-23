@@ -714,8 +714,8 @@ function completeQuest(questId) {
   const q = byId(allQuests(), questId);
   if (!q) return;
   const existing = state.questLog.find(l => l.questId === questId);
-  if (existing) existing.status = "completed";
-  else state.questLog.push({ questId, status: "completed" });
+  if (existing) { existing.status = "completed"; existing.round = state.round; }
+  else state.questLog.push({ questId, status: "completed", round: state.round });
   state.characters.forEach(c => { if (!isFrozen(c)) tickBuffs(c); });
   saveState();
   refresh();
@@ -966,9 +966,26 @@ const WIKI_CATS = [
   { key: "items",   title: "Items",          desc: "Weapons, armor, tools and consumables.",         list: () => ITEMS },
   { key: "alcohol", title: "Alcohol",        desc: "Common drinks sold and rewarded.",               list: () => ALCOHOL },
   { key: "special", title: "Special drinks", desc: "Special brews with buffs and nerfs.",            list: () => SPECIAL_DRINKS },
-  { key: "quests",  title: "Quests",         desc: "Adventures the barkeep can hand out.",           list: () => allQuests() }
+  { key: "quests",  title: "Quests",         desc: "Adventures the barkeep can hand out.",           list: () => wikiQuestsSorted() }
 ];
 const wikiCat = key => WIKI_CATS.find(c => c.key === key);
+
+/* Quest completion info from the log; round may be null for older saves */
+function questCompletion(questId) {
+  const log = state.questLog.find(l => l.questId === questId && l.status === "completed");
+  if (!log) return { done: false, round: null };
+  return { done: true, round: Number.isFinite(log.round) ? log.round : null };
+}
+
+/* Quests sorted for the wiki: completed first, most recent round on top */
+function wikiQuestsSorted() {
+  return allQuests().slice().sort((a, b) => {
+    const ia = questCompletion(a.id), ib = questCompletion(b.id);
+    if (ia.done !== ib.done) return ia.done ? -1 : 1;
+    if (ia.done && ib.done) return (ib.round ?? -1) - (ia.round ?? -1);
+    return 0;
+  });
+}
 
 let wikiState = { view: "home", category: null, entryId: null };
 let wikiOpen = new Set();   /* expanded categories in the index (collapsed by default) */
@@ -996,7 +1013,11 @@ function wikiShort(key, e) {
   if (key === "items") return describeThing(e.id);
   if (key === "alcohol") return `${e.price} 🪙 · Drunkness +${e.buzzDelta}`;
   if (key === "special") return `${e.price} 🪙 · Drunkness ${e.buzzDelta >= 0 ? "+" : ""}${e.buzzDelta}`;
-  if (key === "quests") return e.description || "";
+  if (key === "quests") {
+    const s = questCompletion(e.id);
+    if (s.done) return s.round != null ? `✓ Completed · round ${s.round}` : "✓ Completed";
+    return e.description || "Open";
+  }
   return "";
 }
 
@@ -1172,7 +1193,12 @@ function wikiEntryHtml(key, id) {
       <li><strong>Buff:</strong> ${e.buff ? escapeHtml(e.buff.name) + " — " + modsToText(e.buff.statMods) + " (for " + e.buff.durationQuests + " quest/s)" : "—"}</li>
       <li><strong>Real-world serving:</strong> 🍹 ${escapeHtml(e.realWorldServing)}</li></ul>`;
   } else if (key === "quests") {
-    body = `<p>${escapeHtml(e.description || "")}</p>
+    const s = questCompletion(e.id);
+    const status = s.done
+      ? `<span class="badge buff">✓ Completed${s.round != null ? " — round " + s.round : ""}</span>`
+      : `<span class="badge neutral">Open</span>`;
+    body = `<p>${status}</p>
+      <p>${escapeHtml(e.description || "")}</p>
       <p class="muted">Rewards are handed out manually by the barkeep via the Reward button.</p>`;
   }
 
