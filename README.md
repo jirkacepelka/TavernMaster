@@ -1,117 +1,122 @@
-# 🍺 Krčma Master
+# 🍺 Tavern Master
 
-Zjednodušený DnD companion, kde **hospodský = DM** a **alkohol = zdroj buffů/debuffů**
-i odměna za questy. Statická webová appka — žádný build, žádné závislosti.
+A lightweight DnD companion where the **barkeep = DM** and **alcohol = a source of
+buffs/debuffs** and a quest reward. A static web app — no build, no dependencies.
 
-## Spuštění
+## Running it
 
-Dvě možnosti:
+Two options:
 
-1. **Nejjednodušší:** dvojklik na `index.html`. Herní data se načítají jako
-   obyčejný `<script src="data/data.js">`, takže appka běží i z `file://` bez serveru.
-2. **Přes lokální server** (volitelné, hodí se při vývoji):
+1. **Simplest:** double-click `index.html`. Game data loads as a plain
+   `<script src="data/data.js">`, so the app runs from `file://` with no server.
+2. **Via a local server** (optional, handy for development):
    ```bash
    python3 -m http.server 8000
-   # nebo
+   # or
    npx serve
    ```
-   a otevři `http://localhost:8000`.
+   then open `http://localhost:8000`.
 
-Stav (postavy, questy, gold) se ukládá do `localStorage` prohlížeče — nic se
-neposílá na server.
+State (characters, quests, gold) is saved in the browser's `localStorage` —
+nothing is sent to a server.
 
-## Herní mechanika ve zkratce
+## Game mechanics in short
 
-- **Drunkness / hladinka** 0–100, start 50.
-  - `0–34` → debuff **Střízlivý útlum**
-  - `35–65` → optimum, žádný postih
-  - `66–100` → debuff **Opilost**
-  - Debuff se váže k pásmu, ne k nápoji — jakmile se postava vrátí do 35–65, zmizí.
-- **Vypití** (tlačítko „🍷 Vypít“ v detailu hráče): buď **z baťohu** (spotřebuje
-  nápoj z inventáře), nebo **obecně** z nabídky. Efekt (hladinka + případný
-  buff/nerf) se aplikuje až po zaškrtnutí „Vypito IRL“.
-- **Kola** (Hospodský → „Další kolo“): každé kolo hráči trochu vystřízliví —
-  ubere se `1 %` (pásmo 0–34), `2 %` (35–65) nebo `3 %` (66–100).
-- **Inventář**: nasazené itemy vs. baťoh. Nasazené vybavení (zbraně/zbroj/
-  ozdoby/nástroje) **buffuje staty** přes svůj `effect`. Najetím myší na item
-  se v tooltipu ukáže, co buffuje.
-- **Odměny za questy**: gold, itemy, alkohol. Alkohol lze rovnou vypít, nebo
-  uložit do baťohu.
-- **Tavern**: nákup nápojů za gold — koupené jde do baťohu, vypiješ ho v detailu.
-- **Diverzita** (volitelné, feature flag): pokud postava pije 3× po sobě stejný
-  nápoj, další stejný má o 50 % nižší přírůstek hladinky.
+- **Drunkness** 0–100, starts at 50.
+  - `0–34` → **Sober Slump** debuff
+  - `35–65` → optimal, no penalty
+  - `66–100` → **Drunkenness** debuff
+  - The debuff is tied to the zone, not the drink — once back in 35–65 it clears.
+- **Drink** ("🍷 Drink" on the character detail): either **from the backpack**
+  (consumes an inventory drink) or **general** from the menu. The effect
+  (drunkness + optional buff/nerf) applies only after ticking "Drank it IRL".
+- **Rounds** (Admin → "Next round"): each round characters sober up a bit —
+  `1%` (zone 0–34), `2%` (35–65) or `3%` (66–100).
+- **Inventory**: equipped items vs. backpack. Equipped gear (weapons/armor/
+  trinkets/tools) **buffs stats** via its `effect`. Hover an item to see what it
+  buffs in the tooltip.
+- **Quest rewards**: gold, items, alcohol. Alcohol can be drunk right away or
+  stored in the backpack.
+- **Tavern**: buy drinks for gold — purchases go to the backpack, drink them
+  from the character detail.
+- **Diversity** (optional feature flag): if a character drinks the same drink
+  3 times in a row, the next identical drink gives 50% less drunkness.
 
-## Obrazovky
+## Screens
 
-- **Hráči** — seznam hráčů (klikací řádky) + tlačítko „＋ Nový hráč“.
-- **Detail hráče** — avatar, staty (s buffy), drunkness bar, aktivní buffy,
-  nasazené itemy a baťoh (nasadit / sundat / vypít), tlačítko „Vypít“.
-- **Nový hráč** — jméno, rasa, povolání, živý náhled statů.
-- **Hospodský** — přehled postav, počítadlo + tlačítko kol, questy (splnění +
-  odměna), přímé DM úpravy statů/hladinky, přidání questu, export/import.
-- **Tavern** — nákup nápojů za gold do baťohu.
+- **Characters** — character list (clickable rows) + "＋ New character" button.
+- **Character detail** — avatar, stats (with buffs), drunkness bar, active buffs,
+  equipped items and backpack (equip / unequip / drink), "Drink" button.
+- **New character** — name, race, class, live stat preview.
+- **Admin** — character overview, round counter + button, quests (complete +
+  reward), direct DM edits of stats/drunkness, add a quest, export/import.
+- **Tavern** — buy drinks for gold into the backpack.
 
-## Úprava obsahu (rasy, itemy, alkohol…)
+## Editing content (races, items, alcohol…)
 
-Veškerý herní obsah je v [`data/data.js`](data/data.js). Uprav pole a appka
-pojede jinak — do `app.js` sahat netřeba. K dispozici:
+All game content lives in [`data/data.js`](data/data.js). Edit the arrays and the
+app changes — no need to touch `app.js`. Available:
 
-| Konstanta          | Co obsahuje                                                    |
-|--------------------|---------------------------------------------------------------|
-| `BASE_STATS`       | základní staty nové postavy (`str/dex/int/con`)               |
-| `RACES`            | rasy + jejich `statMods`                                       |
-| `CLASSES`          | povolání + `statMods` + `startingItems`                       |
-| `ITEMS`            | itemy (zbraně, zbroj, lektvary…)                              |
-| `ALCOHOL`          | běžné nápoje k prodeji/odměnám (`buzzDelta`, `price`)         |
-| `SPECIAL_DRINKS`   | speciální drinky s buffem/nerfem a IRL porcí                   |
-| `QUESTS`           | předdefinované questy                                          |
-| `DIVERSITY_BONUS_ENABLED` | `true`/`false` — zapnutí bonusu za diverzitu alkoholu  |
+| Constant                  | What it holds                                           |
+|---------------------------|---------------------------------------------------------|
+| `BASE_STATS`              | base stats of a new character (`str/dex/int/con`)       |
+| `RACES`                   | races + their `statMods` + `avatar` image path          |
+| `CLASSES`                 | classes + `statMods` + `startingItems`                  |
+| `ITEMS`                   | items (weapons, armor, potions…), `effect`, `icon`      |
+| `ALCOHOL`                 | common drinks for sale/rewards (`buzzDelta`, `price`)   |
+| `SPECIAL_DRINKS`          | special drinks with a buff/nerf and a real-world serving|
+| `QUESTS`                  | predefined quests                                       |
+| `DIVERSITY_BONUS_ENABLED` | `true`/`false` — toggles the drink-diversity bonus      |
 
-Příklad nové rasy:
+Example of a new race:
 ```js
-{ id: "gnome", name: "Gnóm", statMods: { str: -1, dex: 1, int: 2, con: 0 },
-  description: "Vynálezci a alchymisté." }
+{ id: "gnome", name: "Gnome", statMods: { str: -1, dex: 1, int: 2, con: 0 },
+  avatar: "assets/races/gnome.webp", description: "Inventors and alchemists." }
 ```
 
-Nová položka `id` musí být unikátní. `startingItems` a `rewardItems` odkazují
-na `id` z `ITEMS`, `rewardAlcohol` na `id` z `ALCOHOL`.
+Each new `id` must be unique. `startingItems` and `rewardItems` reference `id`s
+from `ITEMS`; `rewardAlcohol` references an `id` from `ALCOHOL`.
 
-## Export / Import kampaně
+## Export / Import a campaign
 
-- **Exportovat kampaň** (Hospodský dashboard) stáhne `kampan.dnd` — je to
-  obyčejný JSON s jinou příponou. Vhodné pro zálohu nebo pokračování příště.
-- **Importovat** načte `.dnd` soubor a po potvrzení **přepíše** aktuální stav.
+- **Export** (Admin dashboard) downloads `campaign.dnd` — plain JSON with a
+  different extension. Good for a backup or continuing next time.
+- **Import** loads a `.dnd` file and, after confirmation, **overwrites** the
+  current state.
 
-## Nasazení na Vercel
+## Deploying
 
-Čistě statický projekt, žádný build:
+The project is fully static (no build step).
 
-1. Nahraj repozitář na GitHub.
-2. Ve Vercelu **New Project → Import** repozitáře.
-3. Framework Preset: **Other**. Build Command: *(nechat prázdné)*.
-   Output Directory: *(kořen, prázdné)*.
-4. Deploy. Hotovo.
+### GitHub Pages
+1. Push the repo to GitHub.
+2. **Settings → Pages**.
+3. **Source:** "Deploy from a branch", **Branch:** `main`, folder `/ (root)` → Save.
+4. It goes live at `https://<user>.github.io/<repo>/`.
 
-Alternativně z CLI: `npm i -g vercel && vercel`.
+### Vercel
+New Project → Import the repo → Framework Preset **Other**, empty Build Command,
+root Output Directory → Deploy. Or from the CLI: `npm i -g vercel && vercel`.
 
-## Struktura projektu
+## Project structure
 
 ```
-index.html         -- markup + přepínané obrazovky
-style.css          -- vzhled dle Penpot návrhu (tavern pozadí, červený akcent)
-app.js             -- stav, routing, herní logika
-data/data.js       -- VEŠKERÝ herní obsah (edituj tady)
-assets/bg.webp     -- pozadí (rozmazaný interiér hospody) z návrhu
+index.html         -- markup + switched views
+style.css          -- look from the Penpot design (tavern background, red accent)
+app.js             -- state, routing, game logic
+data/data.js       -- ALL game content (edit here)
+assets/bg.webp     -- background (blurred tavern interior) from the design
+assets/races/*.webp-- race profile images (avatars)
+Profile pictures/  -- source race images (reference; not used at runtime)
 README.md
 ```
 
-Pozn.: avatar je zatím emoji placeholder ve stejném 250×250 slotu jako v návrhu.
-Návrh používal watermarkovaný stock portrét, ten není přibalen — vlastní obrázek
-jde postavě dát polem `avatar` (URL/cesta).
+Note: a character's avatar comes from its race image (`RACES[].avatar`), or you
+can override it per character with an `avatar` field (URL/path).
 
-## Co by šlo dál rozšířit
+## Ideas for later
 
-- Víc ras/povolání, souboje s hody kostkou.
-- DM poznámky k postavám, deník kampaně.
-- Historie hladinky (graf), více typů debuffů.
-- Sdílení kampaně přes URL místo souboru.
+- More races/classes, dice-roll combat.
+- DM notes per character, a campaign journal.
+- Drunkness history (chart), more debuff types.
+- Sharing a campaign via URL instead of a file.
