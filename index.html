@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tavern Master — DnD companion</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="app-header">
+    <h1>TAVERN<br>MASTER</h1>
+    <nav class="top-nav">
+      <button class="nav-btn" data-nav="players">Characters</button>
+      <button class="nav-btn" data-nav="dm">Admin</button>
+      <button class="nav-btn" data-nav="tavern">Tavern →</button>
+    </nav>
+  </header>
+
+  <main id="app">
+
+    <!-- ===================================================== CHARACTER LIST -->
+    <section id="view-players" class="view">
+      <div class="view-head">
+        <h2>Characters</h2>
+        <button class="btn accent" data-nav="create">＋ New character</button>
+      </div>
+      <div id="players-list" class="stack"></div>
+    </section>
+
+    <!-- ================================================== CHARACTER DETAIL -->
+    <section id="view-detail" class="view">
+      <div class="crumbs"><span class="accent" data-nav="players">Characters</span>
+        <span> / </span><span id="detail-crumb"></span></div>
+      <div id="detail-content"></div>
+    </section>
+
+    <!-- ================================================== CREATE CHARACTER -->
+    <section id="view-create" class="view">
+      <div class="crumbs"><span class="accent" data-nav="players">Characters</span>
+        <span> / New character</span></div>
+      <h2>New character</h2>
+      <form id="create-form" class="card">
+        <label>Name
+          <input type="text" id="c-name" placeholder="Thoromir" autocomplete="off">
+          <span class="field-error" id="c-name-error"></span>
+        </label>
+        <label>Race
+          <select id="c-race"></select>
+        </label>
+        <label>Class
+          <select id="c-class"></select>
+        </label>
+
+        <div class="preview" id="c-preview">
+          <div class="section-title">Stat preview</div>
+          <div id="c-stats-preview" class="stats-grid"></div>
+          <p class="muted" id="c-items-preview"></p>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn">Create</button>
+          <button type="button" class="btn ghost" data-nav="players">Back</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ========================================================= ADMIN (DM) -->
+    <section id="view-dm" class="view">
+      <div class="view-head">
+        <h2>Admin</h2>
+        <div class="head-actions">
+          <div class="round-box">
+            <span class="muted">Round</span>
+            <strong id="round-count">1</strong>
+            <button class="btn accent small" data-action="next-round">Next round ⏭</button>
+          </div>
+          <button class="btn small" id="btn-export">⬇️ Export</button>
+          <button class="btn small ghost" id="btn-import">⬆️ Import</button>
+          <button class="btn small danger" data-action="reset-game">♻️ Reset game</button>
+          <input type="file" id="import-file" accept=".dnd,application/json" hidden>
+        </div>
+      </div>
+
+      <div class="columns">
+        <div class="col">
+          <h3>Characters</h3>
+          <div id="dm-characters" class="stack"></div>
+        </div>
+        <div class="col">
+          <h3>Quests</h3>
+          <div id="dm-quests" class="stack"></div>
+          <details class="card">
+            <summary>➕ Add custom quest</summary>
+            <form id="quest-form" class="stack">
+              <label>Name <input type="text" id="q-name" autocomplete="off"></label>
+              <label>Description <input type="text" id="q-desc" autocomplete="off"></label>
+              <label>Reward gold <input type="number" id="q-gold" value="10" min="0"></label>
+              <label>Reward alcohol
+                <select id="q-alcohol"></select>
+              </label>
+              <button type="submit" class="btn small">Add quest</button>
+            </form>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================== TAVERN -->
+    <section id="view-tavern" class="view">
+      <h2>🍻 Tavern</h2>
+      <p class="muted">Buy drinks for gold — they go into the character's backpack, drink them from the character detail.</p>
+      <label class="inline">Character:
+        <select id="tavern-character"></select>
+      </label>
+      <div id="tavern-list" class="stack"></div>
+    </section>
+
+  </main>
+
+  <!-- ============================================================= MODAL -->
+  <div id="modal-backdrop" class="modal-backdrop" hidden>
+    <div class="modal card" id="modal-box">
+      <h3 id="modal-title"></h3>
+      <div id="modal-body"></div>
+      <div class="form-actions" id="modal-actions"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <!-- Data is loaded as a plain <script>, not fetch → works from file:// too -->
+  <script src="data/data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

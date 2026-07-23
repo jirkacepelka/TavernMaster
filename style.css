@@ -1,0 +1,275 @@
+/* ============================================================================
+ * Krčma Master — styl
+ * Doslovná reprodukce Penpot návrhu "Tavern Master":
+ *  - celoobrazovkové rozmazané pozadí hospody (assets/bg.webp)
+ *  - plochý layout (žádné orámované karty), centrovaný sloupec ~1000px
+ *  - červený akcent #C93438 na pilulkách/tlačítkách s ČERNÝM textem
+ *  - bílá typografie Inter, jméno 50px, sekce 30px
+ * ==========================================================================*/
+
+:root {
+  --bg:        #121214;
+  --accent:    #c93438;   /* červená z návrhu */
+  --accent-dim:#a52a2e;
+  --ink:       #ffffff;
+  --ink-muted: #c8c2b8;
+  --panel:     rgba(16, 13, 10, .72);  /* poloprůhledné panely (seznamy, modal) */
+  --panel-br:  rgba(255, 255, 255, .10);
+  --green:     #46b56a;
+  --radius-sm: 5px;       /* pilulky / tlačítka (rx5 z návrhu) */
+  --radius-md: 20px;      /* avatar / velké bloky (rx20 z návrhu) */
+  --col:       1000px;    /* šířka obsahového sloupce */
+  --shadow:    0 10px 34px rgba(0,0,0,.5);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  min-height: 100vh;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  background: var(--bg);
+}
+/* pozadí hospody + #121212 overlay na 90 % (dle návrhu) */
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: -1;
+  background:
+    linear-gradient(rgba(18, 18, 18, .90), rgba(18, 18, 18, .90)),
+    url("assets/bg.webp") center/cover no-repeat fixed;
+}
+
+h1, h2, h3, h4 { margin: 0 0 .5rem; font-weight: 700; letter-spacing: -.01em; }
+a { color: var(--accent); }
+.muted { color: var(--ink-muted); font-size: .9rem; }
+
+/* ---------------------------------------------------------------- header - */
+.app-header {
+  display: flex; align-items: center; gap: 1.5rem;
+  padding: 1.1rem 2.2rem;
+  position: sticky; top: 0; z-index: 10;
+}
+.app-header h1 {
+  font-size: 1.25rem; line-height: 1.0; text-transform: uppercase;
+  letter-spacing: .02em; margin: 0; font-weight: 800;
+}
+.top-nav { display: flex; align-items: center; gap: 1.4rem; margin-left: auto; }
+.nav-btn {
+  background: transparent; color: var(--ink); border: none;
+  padding: .2rem 0; cursor: pointer; font-size: 1.05rem; font-weight: 600; font-family: inherit;
+}
+.nav-btn:hover { color: var(--accent); }
+.nav-btn.active { color: var(--accent); }
+/* poslední položka navigace = červené CTA (jako "Shop →" v návrhu) */
+.nav-btn.cta, .nav-btn[data-nav="tavern"] {
+  background: var(--accent); color: #000; border-radius: var(--radius-sm);
+  padding: .55rem 1.1rem; font-weight: 700;
+}
+.nav-btn.cta:hover, .nav-btn[data-nav="tavern"]:hover { background: var(--accent-dim); color: #000; }
+
+/* ----------------------------------------------------------------- views - */
+main { max-width: var(--col); margin: 0 auto; padding: 1.6rem 2.2rem 4rem; }
+.view { display: none; }
+.view.active { display: block; animation: fade .2s ease; }
+@keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; } }
+
+h2 { font-size: 2rem; }
+
+/* -------------------------------------------------------------- breadcrumb */
+.crumbs { font-size: 1rem; color: var(--ink); margin-bottom: 1.6rem; font-weight: 600; }
+.crumbs .accent { color: var(--accent); cursor: pointer; }
+.crumbs span { }
+
+/* --------------------------------------------------------------- buttons - */
+/* primární = červená pilulka s ČERNÝM textem (Drink / Shop v návrhu) */
+.btn {
+  background: var(--accent); color: #000; border: none;
+  padding: .6rem 1.2rem; border-radius: var(--radius-sm); cursor: pointer;
+  font-weight: 700; font-size: .95rem; font-family: inherit;
+  transition: background .15s, transform .05s;
+}
+.btn:hover { background: var(--accent-dim); }
+.btn:active { transform: translateY(1px); }
+.btn.small { padding: .4rem .85rem; font-size: .85rem; }
+.btn.accent { background: var(--accent); color: #000; }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--panel-br); }
+.btn.ghost:hover { border-color: var(--accent); color: var(--accent); background: transparent; }
+.btn.danger { background: transparent; color: var(--accent); border: 1px solid var(--accent-dim); }
+.btn.danger:hover { background: var(--accent); color: #000; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ----------------------------------------------------------------- forms - */
+label { display: block; margin: .8rem 0; font-size: .85rem; color: var(--ink-muted); font-weight: 600; }
+label.inline { display: inline-flex; align-items: center; gap: .5rem; margin-bottom: 1rem; }
+input, select {
+  width: 100%; margin-top: .35rem; padding: .6rem .75rem;
+  background: rgba(0,0,0,.4); color: var(--ink);
+  border: 1px solid var(--panel-br); border-radius: var(--radius-sm);
+  font-size: .95rem; font-family: inherit;
+}
+label.inline select, label.inline input { width: auto; margin-top: 0; }
+input:focus, select:focus { outline: none; border-color: var(--accent); }
+.form-actions, .head-actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: 1.2rem; align-items: center; }
+.field-error { color: var(--accent); font-size: .8rem; display: block; min-height: 1em; font-weight: 600; }
+.view-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .8rem; margin-bottom: 1.4rem; }
+
+/* poloprůhledné panely tam, kde je potřeba čitelnost (seznam/tavern/dm/modal/form) */
+.card, .player-row, .shop-item, .quest-item {
+  background: var(--panel); border: 1px solid var(--panel-br);
+  border-radius: 12px; padding: 1rem 1.1rem; backdrop-filter: blur(3px);
+}
+.stack { display: flex; flex-direction: column; gap: .8rem; }
+.columns { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4rem; }
+.col { min-width: 0; }
+details.card summary { cursor: pointer; font-weight: 700; }
+.section-title { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-muted); margin: 1rem 0 .4rem; font-weight: 700; }
+
+/* ====================== DETAIL HRÁČE (doslovný template) ================= */
+.detail-hero { display: flex; gap: 20px; align-items: flex-start; margin-bottom: 1rem; }
+.avatar {
+  flex: 0 0 auto; width: 250px; height: 250px; border-radius: var(--radius-md);
+  background: linear-gradient(160deg, #2a2320, #141018);
+  display: flex; align-items: center; justify-content: center; font-size: 6rem;
+  overflow: hidden;
+}
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+.hero-info { flex: 1 1 auto; min-width: 0; padding-top: .3rem; }
+.hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+.char-name { font-size: 50px; font-weight: 800; line-height: 1.02; }
+.tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin: .6rem 0 1rem; }
+
+/* pilulky: třída/rasa = ČERVENÉ s černým textem (jako v návrhu) */
+.badge {
+  display: inline-flex; align-items: center; padding: .28rem .7rem;
+  border-radius: var(--radius-sm); font-size: .85rem; font-weight: 700;
+}
+.badge.pill    { background: var(--accent); color: #000; }
+.badge.debuff  { background: var(--accent); color: #000; }
+.badge.buff    { background: rgba(70,181,106,.9); color: #000; }
+.badge.neutral { background: rgba(0,0,0,.45); color: var(--ink); border: 1px solid var(--panel-br); }
+
+.stat-line { margin: .4rem 0; font-weight: 600; }
+.stat-line .lbl { font-size: .85rem; color: var(--ink-muted); display: block; margin-bottom: .3rem; }
+.stat-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.stat-pill {
+  background: rgba(0,0,0,.45); border: 1px solid var(--panel-br);
+  border-radius: var(--radius-sm); padding: .25rem .6rem; font-size: .85rem; font-weight: 700;
+}
+.stat-pill.buffed { color: var(--green); }
+.stat-pill.nerfed { color: #ff8a8a; }
+
+/* drunkness bar: bílý track, červená výplň (přesně dle návrhu) */
+.buzz-wrap { margin-top: .3rem; max-width: 690px; }
+.buzz-head { font-size: .85rem; color: var(--ink-muted); font-weight: 600; margin-bottom: .35rem; }
+.buzz-bar {
+  position: relative; height: 27px; border-radius: var(--radius-sm); overflow: hidden;
+  background: #ffffff;
+}
+.buzz-fill { height: 100%; transition: width .3s; background: var(--accent); }
+.buzz-pct {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  color: #000; font-weight: 800; font-size: .85rem; mix-blend-mode: normal;
+}
+.buzz-zones { display: flex; justify-content: space-between; font-size: .68rem; color: var(--ink-muted); margin-top: 3px; }
+.zone-badge { margin-left: .5rem; }
+.buff-row { margin-top: .8rem; display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* sekce itemů: 30px nadpis + řada 50×50 čtverců */
+.items-section-title { font-size: 30px; font-weight: 800; margin: 1.8rem 0 .8rem; }
+.item-row { display: flex; flex-wrap: wrap; gap: 12px; }
+.item-sq {
+  position: relative; width: 50px; height: 50px; padding: 0; cursor: pointer;
+  background: #b1b2b5; border: none; border-radius: 4px; overflow: visible;
+  font-family: inherit;
+}
+.item-sq .sq-inner {
+  width: 100%; height: 100%; border-radius: 4px; overflow: hidden;
+  display: flex; align-items: center; justify-content: center; background: #b1b2b5;
+}
+.item-sq img { width: 100%; height: 100%; object-fit: contain; background: #b1b2b5; }
+.item-sq:hover { outline: 2px solid var(--accent); outline-offset: 1px; }
+.item-sq[data-action]::before { content: ""; }
+/* červená tečka = má efekt/buff */
+.item-sq .buff-dot {
+  position: absolute; top: -4px; right: -4px; width: 12px; height: 12px;
+  background: var(--accent); border: 2px solid #000; border-radius: 50%;
+}
+/* tooltip na hover */
+.item-sq[data-tip]:hover::after {
+  content: attr(data-tip);
+  position: absolute; left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%);
+  z-index: 40; background: #000; color: #fff; border: 1px solid var(--accent);
+  padding: .45rem .65rem; border-radius: 8px; font-size: .78rem; font-weight: 600;
+  white-space: nowrap; box-shadow: var(--shadow); pointer-events: none;
+}
+.row-actions { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: 1.4rem; }
+
+/* ------------------------------------------------------- seznam hráčů --- */
+.player-row {
+  display: flex; align-items: center; gap: 1rem; cursor: pointer;
+  transition: border-color .15s, transform .05s;
+}
+.player-row:hover { border-color: var(--accent); }
+.player-row:active { transform: translateY(1px); }
+.player-row .row-main { flex: 1 1 auto; min-width: 0; }
+.player-row .row-name { font-size: 1.2rem; font-weight: 800; }
+.player-row .tag-row { margin: .3rem 0 0; }
+.avatar.sm { width: 54px; height: 54px; border-radius: 10px; font-size: 1.7rem; }
+.row-buzz { flex: 0 0 170px; display: flex; flex-direction: column; gap: .3rem; }
+.mini-bar { height: 10px; border-radius: 5px; overflow: hidden; background: #fff; }
+.row-buzz .muted { font-size: .72rem; }
+.row-gold { flex: 0 0 auto; }
+.row-arrow { flex: 0 0 auto; font-size: 1.7rem; color: var(--ink-muted); }
+.gold-pill { color: #f0c04a; font-weight: 800; }
+
+/* ------------------------------------------------------ DM / questy ----- */
+.char-top { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; }
+.char-top .char-name { font-size: 1.15rem; }
+.round-box { display: inline-flex; align-items: center; gap: .5rem; }
+.round-box strong { font-size: 1.15rem; min-width: 1.2em; text-align: center; }
+.quest-item { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.quest-item.completed { opacity: .5; }
+.shop-item { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+
+/* stat grid (náhled při tvorbě) */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .6rem; margin: .6rem 0; }
+.stat-box { background: rgba(0,0,0,.4); border: 1px solid var(--panel-br); border-radius: var(--radius-sm); padding: .6rem; text-align: center; }
+.stat-box .stat-label { font-size: .68rem; color: var(--ink-muted); text-transform: uppercase; }
+.stat-box .stat-val { font-size: 1.4rem; font-weight: 800; }
+.stat-box.buffed .stat-val { color: var(--green); }
+.stat-box.nerfed .stat-val { color: #ff8a8a; }
+
+/* ----------------------------------------------------------------- modal - */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,.7);
+  display: flex; align-items: center; justify-content: center; z-index: 50; padding: 1rem;
+  backdrop-filter: blur(2px);
+}
+.modal-backdrop[hidden] { display: none; }
+.modal { max-width: 480px; width: 100%; max-height: 85vh; overflow: auto; box-shadow: var(--shadow); }
+.seg { display: flex; gap: 1rem; margin: .3rem 0 .6rem; }
+
+/* ----------------------------------------------------------------- toast - */
+.toast {
+  position: fixed; bottom: 1.4rem; left: 50%; transform: translateX(-50%);
+  background: var(--accent); color: #000; padding: .7rem 1.2rem; border-radius: var(--radius-sm);
+  font-weight: 800; box-shadow: var(--shadow); z-index: 60; animation: fade .2s;
+}
+.empty { color: var(--ink-muted); font-style: italic; padding: .5rem 0; }
+
+/* ------------------------------------------------------------- responsive - */
+@media (max-width: 760px) {
+  main, .app-header { padding-left: 1.1rem; padding-right: 1.1rem; }
+  .columns { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .detail-hero { flex-direction: column; }
+  .avatar { width: 160px; height: 160px; font-size: 4rem; }
+  .char-name { font-size: 2.2rem; }
+  .items-section-title { font-size: 1.5rem; }
+  .player-row { flex-wrap: wrap; }
+  .row-buzz { flex-basis: 100%; }
+  .row-arrow { display: none; }
+  .top-nav { gap: 1rem; }
+}
