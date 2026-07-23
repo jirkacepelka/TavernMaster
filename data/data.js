@@ -84,7 +84,7 @@ const CLASSES = [
     id: "mage",
     name: "Mage",
     statMods: { str: -1, dex: 0, int: 3, con: 0 },
-    startingItems: ["staff_apprentice", "potion_heal"]
+    startingItems: ["staff_apprentice"]
   },
   {
     id: "thief",
@@ -96,46 +96,50 @@ const CLASSES = [
     id: "cleric",
     name: "Cleric",
     statMods: { str: 1, dex: 0, int: 1, con: 1 },
-    startingItems: ["mace", "potion_heal"]
+    startingItems: ["mace"]
   }
 ];
 
 /* ---------------------------------------------------------------- ITEMS ---
  * type: weapon/armor/trinket/tool are "equippable" (can be equipped and then
  *   buff stats via effect). potion/misc are consumable, cannot be equipped.
- * effect: map of stat modifiers — keys str/dex/int/con only. Other keys are
- *   ignored (characters have exactly these four stats).
+ * effect: flat stat modifiers — keys str/dex/int/con only. Other keys ignored.
+ * effectPct: optional PERCENTAGE stat modifiers { str: 30 } applied while
+ *   EQUIPPED, after all flat modifiers (e.g. +30% Strength).
+ * description: optional lore text (shown in Tavernpedia).
  * icon: path/URL to an icon image. When null, the item renders without one.
- *   (Two items ship with an inline SVG icon to show it works.)
  * perRound: optional passive income/drain applied EACH ROUND while EQUIPPED.
  *   { gold: N, drunkness: N } — either value may be negative (a drain).
- * ability: optional ACTIVE ability the player triggers from the character sheet
+ * ability: optional ACTIVE ability triggered from the character sheet
  *   (works from equipped or backpack). Shape:
  *   { name, description, gold?, drunkness?, buff?, cooldownRounds? }
  *   gold/drunkness may be negative; buff = { id, name, statMods, durationQuests }.
  * ------------------------------------------------------------------------- */
 const ITEMS = [
-  { id: "sword_basic",       name: "Iron Sword",       type: "weapon",  effect: { str: 1 },         value: 10, icon: "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Cpath%20d='M7%2027l3-3%204%204-3%203H7v-4z'%20fill='%23a0785a'/%3E%3Cpath%20d='M12%2022L24%206l2%202L14%2024l-2-2z'%20fill='%23d6d6de'/%3E%3C/svg%3E" },
-  { id: "shield_wood",       name: "Wooden Shield",    type: "armor",   effect: { con: 1 },         value: 8,  icon: null },
-  { id: "staff_apprentice",  name: "Apprentice Staff", type: "weapon",  effect: { int: 1 },         value: 12, icon: null },
-  { id: "dagger",            name: "Dagger",           type: "weapon",  effect: { dex: 1 },         value: 6,  icon: null },
-  { id: "mace",              name: "Mace",             type: "weapon",  effect: { str: 1 },         value: 9,  icon: null },
-  { id: "lockpicks",         name: "Lockpicks",        type: "tool",    effect: { dex: 1 },         value: 7,  icon: null },
-  { id: "potion_heal",       name: "Healing Potion",   type: "potion",  effect: null,               value: 15, icon: "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20x='12'%20y='3'%20width='8'%20height='4'%20fill='%23d6d6de'/%3E%3Cpath%20d='M13%207h6v5l4%2011a4%204%200%2001-4%205h-6a4%204%200%2001-4-5l4-11z'%20fill='%23c93438'/%3E%3C/svg%3E" },
-  { id: "amulet_luck",       name: "Amulet of Luck",   type: "trinket", effect: { dex: 1, int: 1 }, value: 25, icon: null },
+  { id: "sword_basic",       name: "Iron Sword",          type: "weapon",  effect: { str: 1 },         value: 10, icon: "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Cpath%20d='M7%2027l3-3%204%204-3%203H7v-4z'%20fill='%23a0785a'/%3E%3Cpath%20d='M12%2022L24%206l2%202L14%2024l-2-2z'%20fill='%23d6d6de'/%3E%3C/svg%3E" },
+  { id: "shield_wood",       name: "Wooden Shield",       type: "armor",   effect: { con: 1 },         value: 8,  icon: null },
+  { id: "staff_apprentice",  name: "Needlessly short rot", type: "weapon", effect: { int: 1 },         value: 12, icon: null },
+  { id: "dagger",            name: "Dagger",              type: "weapon",  effect: { dex: 1 },         value: 6,  icon: null },
+  { id: "mace",              name: "Mace",                type: "weapon",  effect: { str: 1 },         value: 9,  icon: null },
+  { id: "lockpicks",         name: "Lockpicks",           type: "tool",    effect: { dex: 1 },         value: 7,  icon: null },
+  { id: "amulet_luck",       name: "Amulet of Luck",      type: "trinket", effect: { dex: 1, int: 1 }, value: 25, icon: null },
 
   /* per-round income / drain (while equipped) */
   { id: "amulet_prosperity", name: "Amulet of Prosperity", type: "trinket", effect: null, value: 45, icon: null,
     perRound: { gold: 5 } },
-  { id: "cursed_flask",      name: "Cursed Flask",     type: "trinket", effect: null, value: 3,  icon: null,
-    perRound: { gold: -1, drunkness: 4 } },
 
   /* active abilities */
-  { id: "rune_riches",       name: "Rune of Riches",   type: "trinket", effect: null, value: 50, icon: null,
-    ability: { name: "Channel Riches", description: "Channel the rune for a burst of gold.", gold: 25, cooldownRounds: 2 } },
-  { id: "totem_fury",        name: "Totem of Fury",    type: "trinket", effect: null, value: 40, icon: null,
-    ability: { name: "Bloodrage", description: "Down a swig of fury.", drunkness: 15,
-               buff: { id: "fury", name: "Fury", statMods: { str: 4, int: -2 }, durationQuests: 1 }, cooldownRounds: 1 } }
+  { id: "bottle_branik",     name: "Bottle of Braník",    type: "trinket", effect: null, value: 10, icon: null,
+    description: "The owner of this item has the right to sell the contents of their bladder once per round in exchange for money from the underclass in the shady districts of the world of Tavern Master.",
+    ability: { name: "Sell the Goods", description: "Sell to the underclass in the shady districts.", drunkness: -5, gold: 5, cooldownRounds: 2 } },
+
+  { id: "cursed_flask",      name: "Cursed Flask",        type: "trinket", effect: null, value: 3, icon: null,
+    description: "The best friend of the forever thirsty adventurer.",
+    ability: { name: "Try Your Luck", description: "Once every 4 rounds, try your luck: the bartender may hand you a basic alcohol on a 50% dice roll. No automatic effect — it only triggers the cooldown.", cooldownRounds: 4 } },
+
+  { id: "flameblade_alcohol", name: "Alcohol Flame Blade", type: "weapon", value: 80, icon: null,
+    effect: { str: 5 }, effectPct: { str: 30 }, perRound: { drunkness: -5 },
+    description: "The Alcohol Flame Blade is a powerful item that draws its power from the alcohol coursing through its wielder's veins. Be warned: whoever wields the power of the Flame Blade is doomed to spend eternity drinking in a bar." }
 ];
 
 /* --------------------------------------------- ALCOHOL (common goods / rewards) - */

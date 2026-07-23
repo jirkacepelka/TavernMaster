@@ -297,6 +297,13 @@ function effectStatText(effect) {
   if (!effect || !Object.keys(effect).length) return "None";
   return Object.entries(effect).map(([k, v]) => `${v >= 0 ? "+" : ""}${v} ${STAT_LABEL[k] || k}`).join(", ");
 }
+/* Full stat text for an item incl. flat + percentage modifiers */
+function itemStatText(item) {
+  const parts = [];
+  if (item.effect) for (const [k, v] of Object.entries(item.effect)) parts.push(`${v >= 0 ? "+" : ""}${v} ${STAT_LABEL[k] || k}`);
+  if (item.effectPct) for (const [k, v] of Object.entries(item.effectPct)) parts.push(`${v >= 0 ? "+" : ""}${v}% ${STAT_LABEL[k] || k}`);
+  return parts.length ? parts.join(", ") : "None";
+}
 function perRoundText(p) {
   if (!p) return "";
   const parts = [];
@@ -353,11 +360,25 @@ function sumEquipMods(character) {
   return mods;
 }
 
-/* Effective stats = base + active buffs + equipped items */
+/* Percentage stat modifiers from equipped items (applied after flat mods) */
+function sumEquipPct(character) {
+  const pct = {};
+  for (const id of character.equipped) {
+    const item = byId(ITEMS, id);
+    if (!item || !item.effectPct) continue;
+    for (const [k, v] of Object.entries(item.effectPct)) {
+      if (STAT_KEYS.includes(k)) pct[k] = (pct[k] || 0) + v;
+    }
+  }
+  return pct;
+}
+
+/* Effective stats = (base + buffs + equipped flat) then equipped % modifiers */
 function effectiveStats(character) {
   const out = { ...character.stats };
   for (const [k, v] of Object.entries(sumBuffMods(character))) out[k] = (out[k] || 0) + v;
   for (const [k, v] of Object.entries(sumEquipMods(character))) out[k] = (out[k] || 0) + v;
+  for (const [k, v] of Object.entries(sumEquipPct(character))) out[k] = Math.round((out[k] || 0) * (1 + v / 100));
   return out;
 }
 
@@ -417,7 +438,8 @@ function describeThing(id) {
   }
   // items
   const parts = [];
-  if (t.effect && Object.keys(t.effect).length) parts.push(effectStatText(t.effect));
+  const st = itemStatText(t);
+  if (st !== "None") parts.push(st);
   if (t.perRound) parts.push(perRoundText(t.perRound) + "/round");
   if (t.ability) parts.push(`Active: ${t.ability.name}`);
   return parts.length ? parts.join(" · ") : "No effect";
@@ -425,7 +447,7 @@ function describeThing(id) {
 
 function thingBuffs(id) {
   const t = resolveThing(id);
-  if (t.kind === "item") return !!((t.effect && Object.keys(t.effect).length) || t.perRound || t.ability);
+  if (t.kind === "item") return !!((t.effect && Object.keys(t.effect).length) || t.effectPct || t.perRound || t.ability);
   if (t.kind === "special") return !!t.buff;
   return false;
 }
@@ -1298,11 +1320,12 @@ function wikiEntryHtml(key, id) {
     body = `<h2>Stat modifiers</h2>${statTable(e.statMods)}<h2>Starting gear</h2><p>${start}</p>`;
   } else if (key === "items") {
     body = `
+      ${e.description ? `<p>${escapeHtml(e.description)}</p>` : ""}
       <div class="wiki-entry-hero">
         <div class="wiki-portrait item">${e.icon ? `<img src="${e.icon}" alt="">` : icon("box")}</div>
         <div>
           <p><strong>Type:</strong> ${e.type}${EQUIPPABLE_TYPES.includes(e.type) ? " (equippable)" : " (consumable)"}</p>
-          <p><strong>Effect:</strong> ${effectStatText(e.effect)}</p>
+          <p><strong>Effect:</strong> ${itemStatText(e)}</p>
           ${e.perRound ? `<p><strong>Per round (equipped):</strong> ${perRoundText(e.perRound)}</p>` : ""}
           ${e.ability ? `<p><strong>Active ability:</strong> ${escapeHtml(e.ability.name)}${e.ability.description ? " — " + escapeHtml(e.ability.description) : ""} <span class="muted">(${escapeHtml(abilityEffectText(e.ability))})</span></p>` : ""}
           <p><strong>Base value:</strong> ${e.value} ${COIN}</p>
