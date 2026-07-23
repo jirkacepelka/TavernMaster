@@ -301,6 +301,15 @@ details.card summary { cursor: pointer; font-weight: 700; }
 .quest-actions { display: flex; gap: .4rem; flex: 0 0 auto; }
 
 /* -------------------------------------------------------- Tavernpedia ---- */
+/* floating launcher — same look as the nav buttons, pinned bottom-right */
+.floating-wiki {
+  position: fixed; right: 1.2rem; bottom: 1.2rem; z-index: 45;
+  padding: .55rem 1rem; border-radius: 8px;
+  background: var(--panel); border: 1px solid var(--panel-br);
+  backdrop-filter: blur(4px); box-shadow: var(--shadow);
+}
+.floating-wiki:hover { color: var(--accent); border-color: var(--accent); }
+
 /* ---- fullscreen wiki ---- */
 .wiki-overlay {
   position: fixed; inset: 0; z-index: 55;
