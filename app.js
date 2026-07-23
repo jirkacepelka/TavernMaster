@@ -108,9 +108,14 @@ function migrateCharacter(c) {
     buzz: Number.isFinite(c.buzz) ? c.buzz : 50,
     activeBuffs: Array.isArray(c.activeBuffs) ? c.activeBuffs : [],
     drinkHistory: Array.isArray(c.drinkHistory) ? c.drinkHistory : [],
-    story: typeof c.story === "string" ? c.story : ""
+    story: typeof c.story === "string" ? c.story : "",
+    paused: !!c.paused,
+    dead: !!c.dead
   };
 }
+
+/* Frozen = excluded from passive effects (rounds, buff ticks) */
+function isFrozen(c) { return c.paused || c.dead; }
 
 /* All quests = predefined from data.js + custom ones from the DM */
 function allQuests() {
@@ -208,7 +213,9 @@ function handleCreateSubmit(e) {
     buzz: 50,
     activeBuffs: [],
     drinkHistory: [],
-    story: ""
+    story: "",
+    paused: false,
+    dead: false
   };
 
   state.characters.push(character);
@@ -393,10 +400,12 @@ function renderPlayers() {
   wrap.innerHTML = state.characters.map(c => {
     const race = byId(RACES, c.raceId), cls = byId(CLASSES, c.classId);
     const zone = getBuzzZone(c.buzz);
-    return `<div class="player-row" data-action="open-detail" data-id="${c.id}">
+    return `<div class="player-row ${c.dead ? "is-dead" : ""}" data-action="open-detail" data-id="${c.id}">
       <div class="avatar sm">${avatarHtml(c)}</div>
       <div class="row-main">
-        <div class="row-name">${escapeHtml(c.name)}</div>
+        <div class="row-name">${escapeHtml(c.name)}
+          ${c.dead ? '<span class="badge dead">☠ Dead</span>' : ""}
+          ${c.paused ? '<span class="badge paused">⏸ Paused</span>' : ""}</div>
         <div class="tag-row">
           <span class="badge pill">${cls ? cls.name : "?"}</span>
           <span class="badge pill">${race ? race.name : "?"}</span>
@@ -424,17 +433,22 @@ function renderDetail(charId) {
   const eff = effectiveStats(c);
 
   host.innerHTML = `
-    <div class="detail-hero">
-      <div class="avatar">${avatarHtml(c)}</div>
+    <div class="detail-hero ${c.dead ? "is-dead" : ""}">
+      <div class="avatar-wrap">
+        <div class="avatar">${avatarHtml(c)}</div>
+        <button class="btn ghost small avatar-edit-btn" data-action="edit-avatar" data-id="${c.id}">✏️ Image</button>
+      </div>
       <div class="hero-info">
         <div class="hero-top">
           <div class="char-name">${escapeHtml(c.name)}</div>
-          <button class="btn" data-action="drink" data-id="${c.id}">🍷 Drink</button>
+          <button class="btn" data-action="drink" data-id="${c.id}" ${c.dead ? "disabled" : ""}>🍷 Drink</button>
         </div>
         <div class="tag-row">
           <span class="badge pill">${cls ? cls.name : "?"}</span>
           <span class="badge pill">${race ? race.name : "?"}</span>
           <span class="badge neutral"><span class="gold-pill">${c.gold} 🪙</span></span>
+          ${c.dead ? '<span class="badge dead">☠ Dead</span>' : ""}
+          ${c.paused ? '<span class="badge paused">⏸ Paused</span>' : ""}
         </div>
         <div class="stat-line">
           <span class="lbl">Stats:</span>
@@ -459,6 +473,8 @@ function renderDetail(charId) {
 
     <div class="row-actions">
       <button class="btn ghost small" data-nav="players">← Back to characters</button>
+      <button class="btn ghost small" data-action="toggle-pause" data-id="${c.id}">${c.paused ? "▶ Resume" : "⏸ Pause"}</button>
+      <button class="btn ${c.dead ? "ghost" : "danger"} small" data-action="toggle-dead" data-id="${c.id}">${c.dead ? "✚ Revive" : "☠ Kill"}</button>
     </div>`;
 }
 
@@ -683,7 +699,10 @@ function renderDMQuests() {
 /* Next round — drops each character's drunkness by zone */
 function nextRound() {
   state.round += 1;
-  state.characters.forEach(c => applyBuzzDelta(c, -roundDrunknessDrop(c.buzz)));
+  state.characters.forEach(c => {
+    if (isFrozen(c)) return;   // paused / dead characters are unaffected
+    applyBuzzDelta(c, -roundDrunknessDrop(c.buzz));
+  });
   saveState();
   refresh();
   toast(`Round ${state.round} — characters sobered up a bit`);
@@ -697,7 +716,7 @@ function completeQuest(questId) {
   const existing = state.questLog.find(l => l.questId === questId);
   if (existing) existing.status = "completed";
   else state.questLog.push({ questId, status: "completed" });
-  state.characters.forEach(tickBuffs);
+  state.characters.forEach(c => { if (!isFrozen(c)) tickBuffs(c); });
   saveState();
   refresh();
   toast(`Quest "${q.name}" completed`);
@@ -953,6 +972,7 @@ const wikiCat = key => WIKI_CATS.find(c => c.key === key);
 
 let wikiState = { view: "home", category: null, entryId: null };
 let wikiOpen = new Set();   /* expanded categories in the index (collapsed by default) */
+let wikiQuery = "";         /* Tavernpedia search query */
 
 function modsToText(mods) {
   const s = Object.entries(mods || {})
@@ -1005,12 +1025,25 @@ function openWiki() {
 }
 function closeWiki() { $("#wiki-overlay").hidden = true; }
 
-/* ---- right-hand contents index ---- */
+/* ---- left-hand contents index (with search) ---- */
 function renderWikiAside() {
+  $("#wiki-aside").innerHTML = `
+    <div class="wiki-search"><input type="search" id="wiki-search" placeholder="Search Tavernpedia…" value="${escapeHtml(wikiQuery)}" autocomplete="off"></div>
+    <div class="wiki-aside-title">Contents</div>
+    <button class="wiki-link home ${wikiState.view === "home" ? "active" : ""}" data-action="wiki-home">Overview</button>
+    <div id="wiki-index"></div>`;
+  renderWikiIndex();
+}
+
+function renderWikiIndex() {
+  const q = wikiQuery.trim().toLowerCase();
   const groups = WIKI_CATS.map(cat => {
-    const entries = cat.list();
+    let entries = cat.list();
+    if (q) entries = entries.filter(e =>
+      (e.name || "").toLowerCase().includes(q) || (e.description || "").toLowerCase().includes(q));
+    if (q && !entries.length) return "";
     const active = wikiState.category === cat.key;
-    const open = wikiOpen.has(cat.key);
+    const open = q ? true : wikiOpen.has(cat.key);   // searching force-expands matches
     const subs = entries.map(e => {
       const on = wikiState.view === "entry" && wikiState.category === cat.key && wikiState.entryId === e.id;
       return `<button class="wiki-link sub ${on ? "active" : ""}" data-action="wiki-entry" data-cat="${cat.key}" data-entry="${escapeHtml(e.id)}">${escapeHtml(e.name)}</button>`;
@@ -1024,10 +1057,7 @@ function renderWikiAside() {
     </div>`;
   }).join("");
 
-  $("#wiki-aside").innerHTML = `
-    <div class="wiki-aside-title">Contents</div>
-    <button class="wiki-link home ${wikiState.view === "home" ? "active" : ""}" data-action="wiki-home">Overview</button>
-    ${groups}`;
+  $("#wiki-index").innerHTML = groups || `<p class="empty" style="padding:.5rem">No matches.</p>`;
 }
 
 /* ---- breadcrumbs ---- */
@@ -1182,6 +1212,9 @@ function init() {
 
   $("#nav-wiki").addEventListener("click", openWiki);
   $("#wiki-close").addEventListener("click", closeWiki);
+  $("#wiki-aside").addEventListener("input", (e) => {
+    if (e.target.id === "wiki-search") { wikiQuery = e.target.value; renderWikiIndex(); }
+  });
   $("#wiki-overlay").addEventListener("click", (e) => {
     if (e.target.id === "wiki-overlay") closeWiki();
   });
@@ -1201,6 +1234,9 @@ function handleAction(action, el) {
     case "reward":         openRewardModal(id); break;
     case "adjust":         openAdjustModal(id); break;
     case "edit-story":     openStoryModal(id); break;
+    case "edit-avatar":    openAvatarModal(id); break;
+    case "toggle-pause":   togglePause(id); break;
+    case "toggle-dead":    toggleDead(id); break;
     case "delete-char":    deleteCharacter(id); break;
     case "complete-quest": completeQuest(el.dataset.quest); break;
     case "reopen-quest":   reopenQuest(el.dataset.quest); break;
@@ -1234,6 +1270,90 @@ function openResetModal() {
     },
     { label: "Cancel", ghost: true }
   ]);
+}
+
+function togglePause(id) {
+  const c = byId(state.characters, id);
+  if (!c) return;
+  c.paused = !c.paused;
+  saveState();
+  refresh();
+  toast(c.paused ? `${c.name} paused` : `${c.name} resumed`);
+}
+
+function toggleDead(id) {
+  const c = byId(state.characters, id);
+  if (!c) return;
+  if (c.dead) {   // revive immediately
+    c.dead = false;
+    saveState();
+    refresh();
+    toast(`${c.name} revived`);
+    return;
+  }
+  openModal("Kill character?", `<p>Mark <strong>${escapeHtml(c.name)}</strong> as dead? They stay in the roster but are frozen (no drunkness changes, no round effects). You can revive them later.</p>`, [
+    { label: "Kill", primary: true, onClick: () => {
+        c.dead = true;
+        saveState();
+        refresh();
+        toast(`${c.name} was killed`);
+        return true;
+      }
+    },
+    { label: "Cancel", ghost: true }
+  ]);
+}
+
+/* Edit a character's profile image from the GUI (stored locally as a data URL) */
+function openAvatarModal(id) {
+  const c = byId(state.characters, id);
+  if (!c) return;
+  openModal(`Image: ${c.name}`, `
+    <div class="avatar-modal-preview"><div class="avatar">${avatarHtml(c)}</div></div>
+    <label>Upload image <input type="file" id="avatar-file" accept="image/*"></label>
+    <p class="muted">The image is cropped to a square, resized to 256px and stored locally in your browser (it never leaves your device).</p>
+  `, [
+    { label: "Reset to race default", ghost: true, onClick: () => {
+        c.avatar = null;
+        saveState();
+        refresh();
+        toast("Avatar reset to default");
+        return true;
+      }
+    },
+    { label: "Close", ghost: true }
+  ]);
+  $("#avatar-file").addEventListener("change", e => {
+    const file = e.target.files[0];
+    if (file) loadAvatarImage(c, file);
+  });
+}
+
+function loadAvatarImage(c, file) {
+  if (!/^image\//.test(file.type)) { toast("That's not an image."); return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const size = 256;
+      const canvas = document.createElement("canvas");
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      const scale = Math.max(size / img.width, size / img.height);   // cover
+      const w = img.width * scale, h = img.height * scale;
+      ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+      try { c.avatar = canvas.toDataURL("image/webp", 0.85); }
+      catch { c.avatar = canvas.toDataURL("image/jpeg", 0.85); }
+      saveState();
+      closeModal();
+      refresh();
+      toast("Avatar updated");
+    };
+    img.onerror = () => toast("Could not read that image.");
+    img.src = reader.result;
+  };
+  reader.onerror = () => toast("Could not read that file.");
+  reader.readAsDataURL(file);
 }
 
 function deleteCharacter(id) {

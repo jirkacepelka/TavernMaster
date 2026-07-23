@@ -165,11 +165,8 @@ const SPECIAL_DRINKS = [
 
 /* --------------------------------------------------------------- QUESTS ---
  * Text only (name + description). Rewards are handed out manually by the DM
- * via the "Reward" button on a character.
+ * via the "Reward" button on a character. No defaults — the DM adds their own
+ * in the Admin dashboard. Add predefined ones here if you want:
+ *   { id: "q1", name: "Rats in the Cellar", description: "Clear the cellar." }
  * ------------------------------------------------------------------------- */
-const QUESTS = [
-  { id: "q1", name: "Rats in the Cellar",   description: "Clear the tavern cellar of oversized rats." },
-  { id: "q2", name: "The Lost Barrel",      description: "Find the barrel of finest mead that vanished from the cart." },
-  { id: "q3", name: "Bandits on the Road",  description: "Drive off the bandits ambushing travelers by the forest." },
-  { id: "q4", name: "Ghost in the Tower",   description: "Find out what haunts the old watchtower." }
-];
+const QUESTS = [];
