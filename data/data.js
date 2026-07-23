@@ -103,8 +103,8 @@ const CLASSES = [
 /* ---------------------------------------------------------------- ITEMS ---
  * type: weapon/armor/trinket/tool are "equippable" (can be equipped and then
  *   buff stats via effect). potion/misc are consumable, cannot be equipped.
- * effect: map of modifiers; keys str/dex/int/con feed into stats,
- *   def/heal are informational (shown in the tooltip).
+ * effect: map of stat modifiers — keys str/dex/int/con only. Other keys are
+ *   ignored (characters have exactly these four stats).
  * icon: path/URL to an icon image. When null, the item renders without one.
  *   (Two items ship with an inline SVG icon to show it works.)
  * perRound: optional passive income/drain applied EACH ROUND while EQUIPPED.
@@ -116,12 +116,12 @@ const CLASSES = [
  * ------------------------------------------------------------------------- */
 const ITEMS = [
   { id: "sword_basic",       name: "Iron Sword",       type: "weapon",  effect: { str: 1 },         value: 10, icon: "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Cpath%20d='M7%2027l3-3%204%204-3%203H7v-4z'%20fill='%23a0785a'/%3E%3Cpath%20d='M12%2022L24%206l2%202L14%2024l-2-2z'%20fill='%23d6d6de'/%3E%3C/svg%3E" },
-  { id: "shield_wood",       name: "Wooden Shield",    type: "armor",   effect: { def: 1 },         value: 8,  icon: null },
+  { id: "shield_wood",       name: "Wooden Shield",    type: "armor",   effect: { con: 1 },         value: 8,  icon: null },
   { id: "staff_apprentice",  name: "Apprentice Staff", type: "weapon",  effect: { int: 1 },         value: 12, icon: null },
   { id: "dagger",            name: "Dagger",           type: "weapon",  effect: { dex: 1 },         value: 6,  icon: null },
   { id: "mace",              name: "Mace",             type: "weapon",  effect: { str: 1 },         value: 9,  icon: null },
   { id: "lockpicks",         name: "Lockpicks",        type: "tool",    effect: { dex: 1 },         value: 7,  icon: null },
-  { id: "potion_heal",       name: "Healing Potion",   type: "potion",  effect: { heal: 10 },       value: 15, icon: "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20x='12'%20y='3'%20width='8'%20height='4'%20fill='%23d6d6de'/%3E%3Cpath%20d='M13%207h6v5l4%2011a4%204%200%2001-4%205h-6a4%204%200%2001-4-5l4-11z'%20fill='%23c93438'/%3E%3C/svg%3E" },
+  { id: "potion_heal",       name: "Healing Potion",   type: "potion",  effect: null,               value: 15, icon: "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20x='12'%20y='3'%20width='8'%20height='4'%20fill='%23d6d6de'/%3E%3Cpath%20d='M13%207h6v5l4%2011a4%204%200%2001-4%205h-6a4%204%200%2001-4-5l4-11z'%20fill='%23c93438'/%3E%3C/svg%3E" },
   { id: "amulet_luck",       name: "Amulet of Luck",   type: "trinket", effect: { dex: 1, int: 1 }, value: 25, icon: null },
 
   /* per-round income / drain (while equipped) */

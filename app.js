@@ -14,7 +14,7 @@ const APP_VERSION = "1.1";
 const EQUIPPABLE_TYPES = ["weapon", "armor", "trinket", "tool"];
 /* Keys that feed into a character's stats */
 const STAT_KEYS = ["str", "dex", "int", "con"];
-const STAT_LABEL = { str: "Strength", dex: "Dexterity", int: "Intelligence", con: "Constitution", def: "Defense", heal: "Healing" };
+const STAT_LABEL = { str: "Strength", dex: "Dexterity", int: "Intelligence", con: "Constitution" };
 /* ---- inline SVG icons (Feather/Lucide style, open-source, no deps) ---- */
 const ICONS = {
   drink:'<path d="M8 22h8M12 15v7M12 15a5 5 0 0 0 5-5c0-2-.5-4-1-7H8c-.5 3-1 5-1 7a5 5 0 0 0 5 5Z"/>',
