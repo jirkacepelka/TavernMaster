@@ -1158,8 +1158,8 @@ function wikiThumb(key, e) {
 function wikiShort(key, e) {
   if (key === "races" || key === "classes") return modsToText(e.statMods);
   if (key === "items") return describeThing(e.id);
-  if (key === "alcohol") return `${e.price} ${COIN} · Drunkness +${e.buzzDelta}`;
-  if (key === "special") return `${e.price} ${COIN} · Drunkness ${e.buzzDelta >= 0 ? "+" : ""}${e.buzzDelta}`;
+  if (key === "alcohol") return `${e.price} g · Drunkness +${e.buzzDelta}`;
+  if (key === "special") return `${e.price} g · Drunkness ${e.buzzDelta >= 0 ? "+" : ""}${e.buzzDelta}`;
   if (key === "quests") {
     const s = questCompletion(e.id);
     if (s.done) return s.round != null ? `✓ Completed · round ${s.round}` : "✓ Completed";

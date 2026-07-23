@@ -130,7 +130,7 @@ const ITEMS = [
 
   /* active abilities */
   { id: "bottle_branik",     name: "Bottle of Braník",    type: "trinket", effect: null, value: 10, icon: "assets/items/bottle_branik.webp",
-    description: "The owner of this item has the right to sell the contents of their bladder once per round in exchange for money from the underclass in the shady districts of the world of Tavern Master.",
+    description: "The owner of this item has the right to sell the contents of their bladder once every two rounds, in exchange for money from the underclass in the shady districts of the world of Tavern Master.",
     ability: { name: "Sell the Goods", description: "Sell to the underclass in the shady districts.", drunkness: -5, gold: 5, cooldownRounds: 2 } },
 
   { id: "cursed_flask",      name: "Cursed Flask",        type: "trinket", effect: null, value: 3, icon: "assets/items/cursed_flask.webp",
