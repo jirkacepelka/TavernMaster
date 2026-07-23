@@ -191,12 +191,21 @@ details.card summary { cursor: pointer; font-weight: 700; }
 .item-sq img { width: 100%; height: 100%; object-fit: contain; background: #b1b2b5; }
 .item-sq:hover { outline: 2px solid var(--accent); outline-offset: 1px; }
 .item-sq[data-action]::before { content: ""; }
-/* červená tečka = má efekt/buff */
+/* red dot = has an effect/buff */
 .item-sq .buff-dot {
   position: absolute; top: -4px; right: -4px; width: 12px; height: 12px;
   background: var(--accent); border: 2px solid #000; border-radius: 50%;
 }
-/* tooltip na hover */
+/* remove "×" — shows on hover, deletes one instance of the item */
+.item-sq .item-remove {
+  position: absolute; top: -7px; left: -7px; width: 16px; height: 16px;
+  display: none; align-items: center; justify-content: center;
+  background: var(--accent); color: #fff; border: 1px solid #000; border-radius: 50%;
+  font-size: 12px; line-height: 1; font-weight: 800; cursor: pointer; z-index: 2;
+}
+.item-sq:hover .item-remove { display: flex; }
+.item-remove:hover { background: #fff; color: var(--accent); }
+/* tooltip on hover */
 .item-sq[data-tip]:hover::after {
   content: attr(data-tip);
   position: absolute; left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%);
@@ -232,6 +241,17 @@ details.card summary { cursor: pointer; font-weight: 700; }
 .quest-item { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
 .quest-item.completed { opacity: .5; }
 .shop-item { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.shop-item .info { display: flex; align-items: center; gap: .7rem; min-width: 0; }
+.shop-item .shop-text { display: flex; flex-direction: column; min-width: 0; }
+.shop-item .shop-text strong { line-height: 1.2; }
+.shop-icon {
+  flex: 0 0 auto; width: 40px; height: 40px; border-radius: 8px;
+  background: rgba(0,0,0,.4); border: 1px solid var(--panel-br);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.shop-icon img { width: 100%; height: 100%; object-fit: contain; }
+.shop-icon.empty::after { content: "▪"; color: var(--ink-muted); }
+.shop-buy { display: flex; align-items: center; gap: .6rem; flex: 0 0 auto; }
 
 /* stat grid (náhled při tvorbě) */
 .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .6rem; margin: .6rem 0; }

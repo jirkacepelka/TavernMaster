@@ -360,8 +360,9 @@ function renderItemSquare(id, ctx, charId) {
   const inner = t.icon ? `<img src="${t.icon}" alt="">` : "";
   const dot = thingBuffs(id) ? `<span class="buff-dot"></span>` : "";
   const attrs = action ? `data-action="${action}" data-id="${charId}" data-item="${id}"` : "";
+  const remove = `<span class="item-remove" data-action="remove-item" data-id="${charId}" data-item="${id}" title="Remove item">×</span>`;
   return `<button class="item-sq" data-tip="${tip}" ${attrs}>
-    <span class="sq-inner">${inner}</span>${dot}
+    <span class="sq-inner">${inner}</span>${dot}${remove}
   </button>`;
 }
 
@@ -581,6 +582,22 @@ function unequipItem(charId, itemId) {
   toast(`Unequipped: ${(byId(ITEMS, itemId) || {}).name || itemId}`);
 }
 
+/* Remove one instance of an item from a character (equipped or backpack) */
+function removeItem(charId, itemId) {
+  const c = byId(state.characters, charId);
+  if (!c) return;
+  let i = c.equipped.indexOf(itemId);
+  if (i >= 0) c.equipped.splice(i, 1);
+  else {
+    i = c.inventory.indexOf(itemId);
+    if (i < 0) return;
+    c.inventory.splice(i, 1);
+  }
+  saveState();
+  refresh();
+  toast(`Removed: ${resolveThing(itemId).name}`);
+}
+
 /* ============================== ADMIN DASHBOARD ======================== */
 
 function renderDM() {
@@ -769,6 +786,16 @@ function handleAddQuest(e) {
 
 /* ================================= TAVERN =============================== */
 
+/* Everything sellable in the Tavern: items + all drinks */
+function tavernCatalog() {
+  return [...ITEMS, ...ALCOHOL, ...SPECIAL_DRINKS];
+}
+
+/* Suggested (default) price shown to the DM — they set the final one */
+function suggestedPrice(t) {
+  return (t.price != null ? t.price : t.value) || 0;
+}
+
 function renderTavern() {
   const sel = $("#tavern-character");
   const prev = sel.value;
@@ -777,27 +804,51 @@ function renderTavern() {
     : `<option value="">— no character —</option>`;
   if (prev && state.characters.some(c => c.id === prev)) sel.value = prev;
 
-  $("#tavern-list").innerHTML = ALCOHOL.map(a => `
+  $("#tavern-list").innerHTML = tavernCatalog().map(t => {
+    const icon = t.icon
+      ? `<span class="shop-icon"><img src="${t.icon}" alt=""></span>`
+      : `<span class="shop-icon empty"></span>`;
+    return `
     <div class="shop-item">
       <div class="info">
-        <strong>${a.name}</strong> — <span class="gold-pill">${a.price} 🪙</span><br>
-        <span class="muted">Drunkness +${a.buzzDelta} · 🍹 ${a.realWorldServing}</span>
+        ${icon}
+        <div class="shop-text">
+          <strong>${t.name}</strong>
+          <span class="muted">${describeThing(t.id)}</span>
+        </div>
       </div>
-      <button class="btn small" data-action="buy" data-alc="${a.id}">Buy</button>
-    </div>`).join("");
+      <div class="shop-buy">
+        <span class="muted">~${suggestedPrice(t)} 🪙</span>
+        <button class="btn small" data-action="buy" data-item="${t.id}">Buy</button>
+      </div>
+    </div>`;
+  }).join("");
 }
 
-function handleBuy(alcId) {
+/* Buy modal — the DM types the price, it's deducted from the character's gold */
+function openBuyModal(id) {
   const c = byId(state.characters, $("#tavern-character").value);
   if (!c) { toast("Select a character."); return; }
-  const a = byId(ALCOHOL, alcId);
-  if (!a) return;
-  if (c.gold < a.price) { toast("Not enough gold."); return; }
-  c.gold -= a.price;
-  c.inventory.push(a.id);          // bought drink goes to the backpack, drunk in detail
-  saveState();
-  renderTavern();
-  toast(`${c.name} bought ${a.name} (to backpack)`);
+  const t = resolveThing(id);
+  openModal(`Buy: ${t.name}`, `
+    <p class="muted">Buyer: ${escapeHtml(c.name)} — ${c.gold} 🪙</p>
+    <label>Price — set by the DM
+      <input type="number" id="buy-price" value="${suggestedPrice(t)}" min="0">
+    </label>
+  `, [
+    { label: "Buy", primary: true, onClick: () => {
+        const price = parseInt($("#buy-price").value, 10) || 0;
+        if (c.gold < price) { toast("Not enough gold."); return false; }
+        c.gold -= price;
+        c.inventory.push(t.id);       // purchase goes to the backpack
+        saveState();
+        renderTavern();
+        toast(`${c.name} bought ${t.name} for ${price} 🪙`);
+        return true;
+      }
+    },
+    { label: "Cancel", ghost: true }
+  ]);
 }
 
 /* ============================ EXPORT / IMPORT .dnd ====================== */
@@ -911,11 +962,12 @@ function handleAction(action, el) {
     case "drink-item":     drinkItemFromInventory(id, el.dataset.item); break;
     case "equip":          equipItem(id, el.dataset.item); break;
     case "unequip":        unequipItem(id, el.dataset.item); break;
+    case "remove-item":    removeItem(id, el.dataset.item); break;
     case "reward":         openRewardModal(id); break;
     case "adjust":         openAdjustModal(id); break;
     case "delete-char":    deleteCharacter(id); break;
     case "complete-quest": openCompleteQuestModal(el.dataset.quest); break;
-    case "buy":            handleBuy(el.dataset.alc); break;
+    case "buy":            openBuyModal(el.dataset.item); break;
     case "next-round":     nextRound(); break;
     case "reset-game":     openResetModal(); break;
   }
