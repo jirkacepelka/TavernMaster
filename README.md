@@ -35,10 +35,15 @@ nothing is sent to a server.
 - **Inventory**: equipped items vs. backpack. Equipped gear (weapons/armor/
   trinkets/tools) **buffs stats** via its `effect`. Hover an item to see what it
   buffs in the tooltip.
-- **Quest rewards**: gold, items, alcohol. Alcohol can be drunk right away or
-  stored in the backpack.
-- **Tavern**: buy drinks for gold — purchases go to the backpack, drink them
-  from the character detail.
+- **Quests** are text only (name + description). The DM hands out rewards
+  manually with the 🎁 Reward button on a character.
+- **Tavern**: a catalog of every item and drink. Hit Buy and the DM types the
+  price, which is deducted from the selected character's gold; the item goes to
+  their backpack.
+- **Story**: each character has a free-text story, editable from their detail.
+- **Wiki**: a floating 📖 button (bottom-right) opens a reference of all races,
+  classes, items, alcohol, special drinks and quests — generated live from
+  `data/data.js`, so anything you add there shows up automatically.
 - **Diversity** (optional feature flag): if a character drinks the same drink
   3 times in a row, the next identical drink gives 50% less drunkness.
 

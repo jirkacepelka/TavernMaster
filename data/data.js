@@ -163,10 +163,13 @@ const SPECIAL_DRINKS = [
   }
 ];
 
-/* --------------------------------------------------------------- QUESTS --- */
+/* --------------------------------------------------------------- QUESTS ---
+ * Text only (name + description). Rewards are handed out manually by the DM
+ * via the "Reward" button on a character.
+ * ------------------------------------------------------------------------- */
 const QUESTS = [
-  { id: "q1", name: "Rats in the Cellar",   description: "Clear the tavern cellar of oversized rats.", rewardGold: 15, rewardItems: ["dagger"],       rewardAlcohol: "beer_light" },
-  { id: "q2", name: "The Lost Barrel",      description: "Find the barrel of finest mead that vanished from the cart.", rewardGold: 25, rewardItems: [],             rewardAlcohol: "mead" },
-  { id: "q3", name: "Bandits on the Road",  description: "Drive off the bandits ambushing travelers by the forest.", rewardGold: 40, rewardItems: ["amulet_luck"], rewardAlcohol: "moonshine" },
-  { id: "q4", name: "Ghost in the Tower",   description: "Find out what haunts the old watchtower.", rewardGold: 35, rewardItems: ["potion_heal"], rewardAlcohol: "wine_red" }
+  { id: "q1", name: "Rats in the Cellar",   description: "Clear the tavern cellar of oversized rats." },
+  { id: "q2", name: "The Lost Barrel",      description: "Find the barrel of finest mead that vanished from the cart." },
+  { id: "q3", name: "Bandits on the Road",  description: "Drive off the bandits ambushing travelers by the forest." },
+  { id: "q4", name: "Ghost in the Tower",   description: "Find out what haunts the old watchtower." }
 ];

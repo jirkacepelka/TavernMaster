@@ -107,7 +107,8 @@ function migrateCharacter(c) {
     equipped: Array.isArray(c.equipped) ? c.equipped : [],
     buzz: Number.isFinite(c.buzz) ? c.buzz : 50,
     activeBuffs: Array.isArray(c.activeBuffs) ? c.activeBuffs : [],
-    drinkHistory: Array.isArray(c.drinkHistory) ? c.drinkHistory : []
+    drinkHistory: Array.isArray(c.drinkHistory) ? c.drinkHistory : [],
+    story: typeof c.story === "string" ? c.story : ""
   };
 }
 
@@ -206,7 +207,8 @@ function handleCreateSubmit(e) {
     equipped: [],
     buzz: 50,
     activeBuffs: [],
-    drinkHistory: []
+    drinkHistory: [],
+    story: ""
   };
 
   state.characters.push(character);
@@ -443,6 +445,12 @@ function renderDetail(charId) {
       </div>
     </div>
 
+    <div class="items-section-title">Story
+      <button class="btn ghost small" data-action="edit-story" data-id="${c.id}">✏️ Edit</button></div>
+    <div class="story-box">${c.story
+      ? escapeHtml(c.story).replace(/\n/g, "<br>")
+      : '<span class="muted">No story yet. Click Edit to write one.</span>'}</div>
+
     <div class="items-section-title">Equipped items</div>
     ${renderItemRow(c.equipped, "equipped", c.id, "Nothing equipped.")}
 
@@ -452,6 +460,27 @@ function renderDetail(charId) {
     <div class="row-actions">
       <button class="btn ghost small" data-nav="players">← Back to characters</button>
     </div>`;
+}
+
+/* Modal: edit a character's story */
+function openStoryModal(charId) {
+  const c = byId(state.characters, charId);
+  if (!c) return;
+  openModal(`Story: ${c.name}`, `
+    <label>Character story
+      <textarea id="story-text" rows="8" placeholder="Where do they come from, what drives them, what are they running from...">${escapeHtml(c.story || "")}</textarea>
+    </label>
+  `, [
+    { label: "Save", primary: true, onClick: () => {
+        c.story = $("#story-text").value;
+        saveState();
+        refresh();
+        toast("Story saved");
+        return true;
+      }
+    },
+    { label: "Cancel", ghost: true }
+  ]);
 }
 
 /* Modal: Drink — source from backpack or general from the menu */
@@ -604,8 +633,6 @@ function renderDM() {
   $("#round-count").textContent = state.round;
   renderDMCharacters();
   renderDMQuests();
-  $("#q-alcohol").innerHTML = `<option value="">— none —</option>` +
-    ALCOHOL.map(a => `<option value="${a.id}">${a.name}</option>`).join("");
 }
 
 function renderDMCharacters() {
@@ -637,15 +664,18 @@ function renderDMQuests() {
   wrap.innerHTML = quests.map(q => {
     const log = state.questLog.find(l => l.questId === q.id);
     const done = log && log.status === "completed";
-    const alc = q.rewardAlcohol ? (byId(ALCOHOL, q.rewardAlcohol) || {}).name : null;
-    const items = (q.rewardItems || []).map(id => (byId(ITEMS, id) || {}).name || id);
+    const custom = String(q.id).startsWith("cq-");
     return `<div class="quest-item ${done ? "completed" : ""}">
       <div class="info">
         <strong>${escapeHtml(q.name)}</strong> ${done ? "✅" : ""}<br>
-        <span class="muted">${escapeHtml(q.description || "")}</span><br>
-        <span class="muted">Reward: ${q.rewardGold || 0} 🪙${items.length ? ", " + items.join(", ") : ""}${alc ? ", " + alc : ""}</span>
+        <span class="muted">${escapeHtml(q.description || "")}</span>
       </div>
-      ${done ? "" : `<button class="btn small" data-action="complete-quest" data-quest="${q.id}">Complete</button>`}
+      <div class="quest-actions">
+        ${done
+          ? `<button class="btn small ghost" data-action="reopen-quest" data-quest="${q.id}">Reopen</button>`
+          : `<button class="btn small" data-action="complete-quest" data-quest="${q.id}">Complete</button>`}
+        ${custom ? `<button class="btn small danger" data-action="delete-quest" data-quest="${q.id}">🗑</button>` : ""}
+      </div>
     </div>`;
   }).join("");
 }
@@ -659,47 +689,33 @@ function nextRound() {
   toast(`Round ${state.round} — characters sobered up a bit`);
 }
 
-function openCompleteQuestModal(questId) {
+/* Mark a quest completed. Rewards are handed out separately via 🎁 Reward.
+ * Completing a quest ticks every character's quest-scoped buffs by one. */
+function completeQuest(questId) {
   const q = byId(allQuests(), questId);
   if (!q) return;
-  if (!state.characters.length) { toast("Create a character first."); return; }
-  const opts = state.characters.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
-  const alc = q.rewardAlcohol ? (byId(ALCOHOL, q.rewardAlcohol) || {}).name : null;
-  const items = (q.rewardItems || []).map(id => (byId(ITEMS, id) || {}).name || id);
-
-  openModal(`Complete: ${q.name}`, `
-    <p class="muted">Reward: ${q.rewardGold || 0} 🪙${items.length ? ", " + items.join(", ") : ""}${alc ? ", alcohol: " + alc : ""}</p>
-    <label>Assign reward to
-      <select id="reward-char">${opts}</select>
-    </label>
-    ${alc ? `<label class="inline"><input type="checkbox" id="drink-alc"> Character drinks the alcohol now (otherwise to backpack)</label>` : ""}
-  `, [
-    { label: "Complete quest", primary: true, onClick: () => {
-        const c = byId(state.characters, $("#reward-char").value);
-        completeQuest(q, c, alc ? $("#drink-alc").checked : false);
-        return true;
-      }
-    },
-    { label: "Cancel", ghost: true }
-  ]);
-}
-
-function completeQuest(q, character, drinkAlcohol) {
-  if (!character) return;
-  character.gold += q.rewardGold || 0;
-  (q.rewardItems || []).forEach(id => character.inventory.push(id));
-  if (q.rewardAlcohol) {
-    const a = byId(ALCOHOL, q.rewardAlcohol);
-    if (a && drinkAlcohol) applyDrink(character, resolveThing(a.id), false);
-    else if (a) character.inventory.push(a.id);
-  }
-  tickBuffs(character);
-  const existing = state.questLog.find(l => l.questId === q.id);
+  const existing = state.questLog.find(l => l.questId === questId);
   if (existing) existing.status = "completed";
-  else state.questLog.push({ questId: q.id, status: "completed" });
+  else state.questLog.push({ questId, status: "completed" });
+  state.characters.forEach(tickBuffs);
   saveState();
   refresh();
   toast(`Quest "${q.name}" completed`);
+}
+
+function reopenQuest(questId) {
+  state.questLog = state.questLog.filter(l => l.questId !== questId);
+  saveState();
+  renderDM();
+  toast("Quest reopened");
+}
+
+function deleteQuest(questId) {
+  state.customQuests = state.customQuests.filter(q => q.id !== questId);
+  state.questLog = state.questLog.filter(l => l.questId !== questId);
+  saveState();
+  renderDM();
+  toast("Quest deleted");
 }
 
 function tickBuffs(character) {
@@ -773,10 +789,7 @@ function handleAddQuest(e) {
   state.customQuests.push({
     id: "cq-" + uuid(),
     name,
-    description: $("#q-desc").value.trim(),
-    rewardGold: parseInt($("#q-gold").value, 10) || 0,
-    rewardItems: [],
-    rewardAlcohol: $("#q-alcohol").value || null
+    description: $("#q-desc").value.trim()
   });
   saveState();
   $("#quest-form").reset();
@@ -920,6 +933,70 @@ function closeModal() {
   $("#modal-body").innerHTML = "";
 }
 
+/* ================================ WIKI ================================= */
+/* Renders everything from the data files. Reads the live global constants,
+ * so anything the user adds to data/data.js shows up automatically. */
+
+function modsToText(mods) {
+  const s = Object.entries(mods || {})
+    .filter(([, v]) => v)
+    .map(([k, v]) => `${STAT_LABEL[k] || k} ${v >= 0 ? "+" : ""}${v}`)
+    .join(", ");
+  return s || "—";
+}
+
+function wikiIcon(icon) {
+  return icon ? `<span class="shop-icon"><img src="${icon}" alt=""></span>` : `<span class="shop-icon empty"></span>`;
+}
+
+function renderWiki() {
+  const itemName = id => (byId(ITEMS, id) || {}).name || id;
+  const card = inner => `<div class="wiki-card">${inner}</div>`;
+  const section = (title, count, html) =>
+    `<section class="wiki-section"><h3>${title} <span class="muted">(${count})</span></h3>
+     <div class="wiki-grid">${html}</div></section>`;
+
+  const races = RACES.map(r => card(`
+    <span class="wiki-avatar">${r.avatar ? `<img src="${r.avatar}" alt="">` : (RACE_EMOJI[r.id] || "🧑")}</span>
+    <div><strong>${escapeHtml(r.name)}</strong><br>
+      <span class="muted">${escapeHtml(r.description || "")}</span><br>
+      <span class="wiki-mods">${modsToText(r.statMods)}</span></div>`)).join("");
+
+  const classes = CLASSES.map(c => card(`
+    <div><strong>${escapeHtml(c.name)}</strong><br>
+      <span class="wiki-mods">${modsToText(c.statMods)}</span><br>
+      <span class="muted">Start: ${(c.startingItems || []).map(itemName).join(", ") || "—"}</span></div>`)).join("");
+
+  const items = ITEMS.map(i => card(`
+    ${wikiIcon(i.icon)}
+    <div><strong>${escapeHtml(i.name)}</strong> <span class="muted">(${i.type})</span><br>
+      <span class="muted">${describeThing(i.id)} · value ${i.value} 🪙</span></div>`)).join("");
+
+  const alcohol = ALCOHOL.map(a => card(`
+    <div><strong>${escapeHtml(a.name)}</strong> — <span class="muted">${a.price} 🪙 · Drunkness +${a.buzzDelta}</span><br>
+      <span class="muted">🍹 ${escapeHtml(a.realWorldServing)}</span></div>`)).join("");
+
+  const special = SPECIAL_DRINKS.map(d => card(`
+    <div><strong>${escapeHtml(d.name)}</strong> — <span class="muted">${d.price} 🪙 · Drunkness ${d.buzzDelta >= 0 ? "+" : ""}${d.buzzDelta}</span><br>
+      <span class="muted">Buff: ${d.buff ? escapeHtml(d.buff.name) + " (" + modsToText(d.buff.statMods) + ", " + d.buff.durationQuests + "q)" : "—"}</span><br>
+      <span class="muted">🍹 ${escapeHtml(d.realWorldServing)}</span></div>`)).join("");
+
+  const quests = allQuests().map(q => card(`
+    <div><strong>${escapeHtml(q.name)}</strong><br>
+      <span class="muted">${escapeHtml(q.description || "")}</span></div>`)).join("");
+
+  $("#wiki-content").innerHTML =
+    section("Races", RACES.length, races) +
+    section("Classes", CLASSES.length, classes) +
+    section("Items", ITEMS.length, items) +
+    section("Alcohol", ALCOHOL.length, alcohol) +
+    section("Special drinks", SPECIAL_DRINKS.length, special) +
+    section("Quests", allQuests().length, quests);
+}
+
+function openWiki() { renderWiki(); $("#wiki-overlay").hidden = false; }
+function closeWiki() { $("#wiki-overlay").hidden = true; }
+
 /* ================================ INIT ================================= */
 
 function init() {
@@ -951,6 +1028,12 @@ function init() {
     if (e.target.id === "modal-backdrop") closeModal();
   });
 
+  $("#wiki-fab").addEventListener("click", openWiki);
+  $("#wiki-close").addEventListener("click", closeWiki);
+  $("#wiki-overlay").addEventListener("click", (e) => {
+    if (e.target.id === "wiki-overlay") closeWiki();
+  });
+
   navigate("players");
 }
 
@@ -965,8 +1048,11 @@ function handleAction(action, el) {
     case "remove-item":    removeItem(id, el.dataset.item); break;
     case "reward":         openRewardModal(id); break;
     case "adjust":         openAdjustModal(id); break;
+    case "edit-story":     openStoryModal(id); break;
     case "delete-char":    deleteCharacter(id); break;
-    case "complete-quest": openCompleteQuestModal(el.dataset.quest); break;
+    case "complete-quest": completeQuest(el.dataset.quest); break;
+    case "reopen-quest":   reopenQuest(el.dataset.quest); break;
+    case "delete-quest":   deleteQuest(el.dataset.quest); break;
     case "buy":            openBuyModal(el.dataset.item); break;
     case "next-round":     nextRound(); break;
     case "reset-game":     openResetModal(); break;

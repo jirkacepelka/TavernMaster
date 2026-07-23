@@ -93,13 +93,10 @@
             <summary>➕ Add custom quest</summary>
             <form id="quest-form" class="stack">
               <label>Name <input type="text" id="q-name" autocomplete="off"></label>
-              <label>Description <input type="text" id="q-desc" autocomplete="off"></label>
-              <label>Reward gold <input type="number" id="q-gold" value="10" min="0"></label>
-              <label>Reward alcohol
-                <select id="q-alcohol"></select>
-              </label>
+              <label>Description <textarea id="q-desc" rows="2"></textarea></label>
               <button type="submit" class="btn small">Add quest</button>
             </form>
+            <p class="muted">Quests are text only — hand out rewards manually with the 🎁 Reward button on a character.</p>
           </details>
         </div>
       </div>
@@ -127,6 +124,18 @@
   </div>
 
   <div id="toast" class="toast" hidden></div>
+
+  <!-- ============================================================== WIKI -->
+  <button id="wiki-fab" class="fab" title="Open the wiki">📖 Wiki</button>
+  <div id="wiki-overlay" class="wiki-overlay" hidden>
+    <div class="wiki-panel">
+      <div class="wiki-head">
+        <h2>📖 Wiki</h2>
+        <button class="btn ghost small" id="wiki-close">Close ✕</button>
+      </div>
+      <div id="wiki-content"></div>
+    </div>
+  </div>
 
   <!-- Data is loaded as a plain <script>, not fetch → works from file:// too -->
   <script src="data/data.js"></script>
