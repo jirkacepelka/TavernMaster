@@ -8,21 +8,25 @@
  * ==========================================================================*/
 
 :root {
-  --bg:        #121214;
-  --accent:    #c93438;   /* červená z návrhu */
-  --accent-dim:#a52a2e;
-  --ink:       #ffffff;
-  --ink-muted: #c8c2b8;
-  --panel:     rgba(16, 13, 10, .72);  /* poloprůhledné panely (seznamy, modal) */
-  --panel-br:  rgba(255, 255, 255, .10);
-  --green:     #46b56a;
-  --radius-sm: 5px;       /* pilulky / tlačítka (rx5 z návrhu) */
-  --radius-md: 20px;      /* avatar / velké bloky (rx20 z návrhu) */
-  --col:       1000px;    /* šířka obsahového sloupce */
-  --shadow:    0 10px 34px rgba(0,0,0,.5);
+  --bg:          #121214;
+  --accent:      #d93a3f;   /* brand red for fills — bright enough for black text to pass AA */
+  --accent-dim:  #b83338;   /* hover */
+  --accent-text: #f26e72;   /* red used as TEXT on the dark bg (passes AA) */
+  --ink:         #ffffff;
+  --ink-muted:   #c8c2b8;
+  --panel:       rgba(16, 13, 10, .72);  /* translucent panels (lists, modal) */
+  --panel-br:    rgba(255, 255, 255, .10);
+  --green:       #46b56a;
+  --radius-sm:   8px;       /* buttons / inputs / pills */
+  --radius-md:   20px;      /* avatars / large blocks */
+  --col:         1000px;    /* content column width */
+  --shadow:      0 10px 34px rgba(0,0,0,.5);
 }
 
 * { box-sizing: border-box; }
+
+/* visible keyboard focus everywhere (mouse clicks stay clean via :focus-visible) */
+:focus-visible { outline: 2px solid #fff; outline-offset: 2px; border-radius: 3px; }
 
 body {
   margin: 0;
@@ -30,6 +34,7 @@ body {
   color: var(--ink);
   min-height: 100vh;
   line-height: 1.4;
+  overflow-x: hidden;                 /* guard against accidental sideways scroll */
   -webkit-font-smoothing: antialiased;
   background: var(--bg);
 }
@@ -42,26 +47,29 @@ body::before {
 }
 
 h1, h2, h3, h4 { margin: 0 0 .5rem; font-weight: 700; letter-spacing: -.01em; }
-a { color: var(--accent); }
+a { color: var(--accent-text); }
 .muted { color: var(--ink-muted); font-size: .9rem; }
 
 /* ---------------------------------------------------------------- header - */
 .app-header {
-  display: flex; align-items: center; gap: 1.5rem;
+  display: flex; align-items: center; gap: 1rem 1.5rem; flex-wrap: wrap;
   padding: 1.1rem 2.2rem;
   position: sticky; top: 0; z-index: 10;
+  background: rgba(12,10,8,.55); backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--panel-br);
 }
 .app-header h1 {
   font-size: 1.25rem; line-height: 1.0; text-transform: uppercase;
   letter-spacing: .02em; margin: 0; font-weight: 800;
 }
-.top-nav { display: flex; align-items: center; gap: 1.4rem; margin-left: auto; }
+.top-nav { display: flex; align-items: center; gap: 1.4rem; margin-left: auto; flex-wrap: wrap; }
 .nav-btn {
   background: transparent; color: var(--ink); border: none;
+  border-bottom: 2px solid transparent;
   padding: .2rem 0; cursor: pointer; font-size: 1.05rem; font-weight: 600; font-family: inherit;
 }
-.nav-btn:hover { color: var(--accent); }
-.nav-btn.active { color: var(--accent); }
+.nav-btn:hover { color: var(--accent-text); }
+.nav-btn.active { color: var(--accent-text); border-bottom-color: var(--accent-text); }
 /* poslední položka navigace = červené CTA (jako "Shop →" v návrhu) */
 .nav-btn.cta, .nav-btn[data-nav="tavern"] {
   background: var(--accent); color: #000; border-radius: var(--radius-sm);
@@ -79,8 +87,7 @@ h2 { font-size: 2rem; }
 
 /* -------------------------------------------------------------- breadcrumb */
 .crumbs { font-size: 1rem; color: var(--ink); margin-bottom: 1.6rem; font-weight: 600; }
-.crumbs .accent { color: var(--accent); cursor: pointer; }
-.crumbs span { }
+.crumbs .accent { color: var(--accent-text); cursor: pointer; }
 
 /* --------------------------------------------------------------- buttons - */
 /* primární = červená pilulka s ČERNÝM textem (Drink / Shop v návrhu) */
@@ -95,8 +102,8 @@ h2 { font-size: 2rem; }
 .btn.small { padding: .4rem .85rem; font-size: .85rem; }
 .btn.accent { background: var(--accent); color: #000; }
 .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--panel-br); }
-.btn.ghost:hover { border-color: var(--accent); color: var(--accent); background: transparent; }
-.btn.danger { background: transparent; color: var(--accent); border: 1px solid var(--accent-dim); }
+.btn.ghost:hover { border-color: var(--accent-text); color: var(--accent-text); background: transparent; }
+.btn.danger { background: transparent; color: var(--accent-text); border: 1px solid var(--accent-dim); }
 .btn.danger:hover { background: var(--accent); color: #000; }
 .btn:disabled { opacity: .4; cursor: not-allowed; }
 
@@ -111,9 +118,9 @@ input, select, textarea {
 }
 textarea { resize: vertical; min-height: 3rem; line-height: 1.4; }
 label.inline select, label.inline input { width: auto; margin-top: 0; }
-input:focus, select:focus { outline: none; border-color: var(--accent); }
+input:focus, select:focus, textarea:focus { border-color: var(--accent-text); }
 .form-actions, .head-actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: 1.2rem; align-items: center; }
-.field-error { color: var(--accent); font-size: .8rem; display: block; min-height: 1em; font-weight: 600; }
+.field-error { color: var(--accent-text); font-size: .8rem; display: block; min-height: 1em; font-weight: 600; }
 .view-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .8rem; margin-bottom: 1.4rem; }
 
 /* poloprůhledné panely tam, kde je potřeba čitelnost (seznam/tavern/dm/modal/form) */
@@ -185,7 +192,7 @@ details.card summary { cursor: pointer; font-weight: 700; }
   position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
   color: #000; font-weight: 800; font-size: .85rem; mix-blend-mode: normal;
 }
-.buzz-zones { display: flex; justify-content: space-between; font-size: .68rem; color: var(--ink-muted); margin-top: 3px; }
+.buzz-zones { display: flex; justify-content: space-between; font-size: .72rem; color: var(--ink-muted); margin-top: 3px; }
 .zone-badge { margin-left: .5rem; }
 .buff-row { margin-top: .8rem; display: flex; gap: 6px; flex-wrap: wrap; }
 
@@ -194,11 +201,11 @@ details.card summary { cursor: pointer; font-weight: 700; }
 .item-row { display: flex; flex-wrap: wrap; gap: 12px; }
 .item-sq {
   position: relative; width: 50px; height: 50px; padding: 0; cursor: pointer;
-  background: #b1b2b5; border: none; border-radius: 4px; overflow: visible;
+  background: #b1b2b5; border: none; border-radius: 6px; overflow: visible;
   font-family: inherit;
 }
 .item-sq .sq-inner {
-  width: 100%; height: 100%; border-radius: 4px; overflow: hidden;
+  width: 100%; height: 100%; border-radius: 6px; overflow: hidden;
   display: flex; align-items: center; justify-content: center; background: #b1b2b5;
 }
 .item-sq img { width: 100%; height: 100%; object-fit: contain; background: #b1b2b5; }
@@ -209,22 +216,25 @@ details.card summary { cursor: pointer; font-weight: 700; }
   position: absolute; top: -4px; right: -4px; width: 12px; height: 12px;
   background: var(--accent); border: 2px solid #000; border-radius: 50%;
 }
-/* remove "×" — shows on hover, deletes one instance of the item */
+/* remove "×" — always visible (usable on touch), stronger on hover/focus */
 .item-sq .item-remove {
-  position: absolute; top: -7px; left: -7px; width: 16px; height: 16px;
-  display: none; align-items: center; justify-content: center;
-  background: var(--accent); color: #fff; border: 1px solid #000; border-radius: 50%;
-  font-size: 12px; line-height: 1; font-weight: 800; cursor: pointer; z-index: 2;
+  position: absolute; top: -8px; left: -8px; width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+  background: #1a1614; color: #fff; border: 1px solid var(--panel-br); border-radius: 50%;
+  font-size: 13px; line-height: 1; font-weight: 800; cursor: pointer; z-index: 2;
+  opacity: .75; transition: opacity .12s, background .12s;
 }
-.item-sq:hover .item-remove { display: flex; }
-.item-remove:hover { background: #fff; color: var(--accent); }
-/* tooltip on hover */
-.item-sq[data-tip]:hover::after {
+.item-sq:hover .item-remove, .item-remove:hover, .item-remove:focus-visible {
+  opacity: 1; background: var(--accent); color: #000;
+}
+/* tooltip on hover / keyboard focus */
+.item-sq[data-tip]:hover::after,
+.item-sq[data-tip]:focus-visible::after {
   content: attr(data-tip);
   position: absolute; left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%);
-  z-index: 40; background: #000; color: #fff; border: 1px solid var(--accent);
+  z-index: 40; background: #000; color: #fff; border: 1px solid var(--accent-text);
   padding: .45rem .65rem; border-radius: 8px; font-size: .78rem; font-weight: 600;
-  white-space: nowrap; box-shadow: var(--shadow); pointer-events: none;
+  max-width: 240px; white-space: normal; width: max-content; box-shadow: var(--shadow); pointer-events: none;
 }
 .row-actions { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: 1.4rem; }
 
@@ -238,7 +248,7 @@ details.card summary { cursor: pointer; font-weight: 700; }
 .player-row .row-main { flex: 1 1 auto; min-width: 0; }
 .player-row .row-name { font-size: 1.2rem; font-weight: 800; }
 .player-row .tag-row { margin: .3rem 0 0; }
-.avatar.sm { width: 54px; height: 54px; border-radius: 10px; font-size: 1.7rem; }
+.avatar.sm { width: 54px; height: 54px; border-radius: 12px; font-size: 1.7rem; }
 .row-buzz { flex: 0 0 170px; display: flex; flex-direction: column; gap: .3rem; }
 .mini-bar { height: 10px; border-radius: 5px; overflow: hidden; background: #fff; }
 .row-buzz .muted { font-size: .72rem; }
@@ -269,7 +279,7 @@ details.card summary { cursor: pointer; font-weight: 700; }
 /* stat grid (náhled při tvorbě) */
 .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .6rem; margin: .6rem 0; }
 .stat-box { background: rgba(0,0,0,.4); border: 1px solid var(--panel-br); border-radius: var(--radius-sm); padding: .6rem; text-align: center; }
-.stat-box .stat-label { font-size: .68rem; color: var(--ink-muted); text-transform: uppercase; }
+.stat-box .stat-label { font-size: .72rem; color: var(--ink-muted); text-transform: uppercase; }
 .stat-box .stat-val { font-size: 1.4rem; font-weight: 800; }
 .stat-box.buffed .stat-val { color: var(--green); }
 .stat-box.nerfed .stat-val { color: #ff8a8a; }
@@ -342,7 +352,7 @@ details.card summary { cursor: pointer; font-weight: 700; }
 }
 
 /* main content */
-.wiki-eyebrow { color: var(--accent); font-weight: 800; font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; margin-bottom: .5rem; }
+.wiki-eyebrow { color: var(--accent-text); font-weight: 800; font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; margin-bottom: .5rem; }
 .wiki-title { font-size: 2.4rem; margin: 0 0 1rem; letter-spacing: -.02em; }
 .wiki-intro p { color: var(--ink-muted); margin: 0 0 .8rem; }
 .wiki-main code { background: rgba(255,255,255,.08); padding: .1rem .35rem; border-radius: 4px; font-size: .85em; }
@@ -350,7 +360,7 @@ details.card summary { cursor: pointer; font-weight: 700; }
   border: 1px solid var(--accent-dim); border-left: 3px solid var(--accent);
   background: rgba(201,52,56,.08); border-radius: 12px; padding: 1.1rem 1.3rem; margin: 1.6rem 0;
 }
-.wiki-callout-label { color: var(--accent); font-weight: 800; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; }
+.wiki-callout-label { color: var(--accent-text); font-weight: 800; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; }
 .wiki-callout h2 { font-size: 1.35rem; margin: .3rem 0 .6rem; }
 .wiki-callout p { color: var(--ink-muted); margin: 0 0 .7rem; }
 .wiki-callout .btn { margin-top: .3rem; text-decoration: none; display: inline-block; }
@@ -385,13 +395,13 @@ details.card summary { cursor: pointer; font-weight: 700; }
 
 /* breadcrumbs + article */
 .wiki-crumbs { font-size: .9rem; color: var(--ink-muted); margin-bottom: 1rem; font-weight: 600; }
-.wiki-crumbs .crumb.link { color: var(--accent); cursor: pointer; }
+.wiki-crumbs .crumb.link { color: var(--accent-text); cursor: pointer; }
 .wiki-crumbs .sep { margin: 0 .4rem; opacity: .5; }
 .wiki-article p { color: var(--ink); line-height: 1.6; }
 .wiki-article h2 { font-size: 1.3rem; margin: 1.6rem 0 .7rem; }
 .wiki-entry-hero { display: flex; gap: 1.2rem; align-items: flex-start; margin-bottom: 1rem; }
 .wiki-portrait {
-  flex: 0 0 auto; width: 200px; height: 200px; border-radius: 14px; overflow: hidden;
+  flex: 0 0 auto; width: 200px; height: 200px; border-radius: 16px; overflow: hidden;
   background: rgba(0,0,0,.4); border: 1px solid var(--panel-br);
   display: flex; align-items: center; justify-content: center; font-size: 5rem;
 }
@@ -402,7 +412,7 @@ details.card summary { cursor: pointer; font-weight: 700; }
 .wiki-table th { color: var(--ink-muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; }
 .wiki-facts { list-style: none; padding: 0; margin: 0; }
 .wiki-facts li { padding: .5rem 0; border-bottom: 1px solid var(--panel-br); }
-.wiki-inline-link { background: none; border: none; color: var(--accent); cursor: pointer; font: inherit; padding: 0; }
+.wiki-inline-link { background: none; border: none; color: var(--accent-text); cursor: pointer; font: inherit; padding: 0; text-decoration: underline; }
 
 /* right index links */
 .wiki-search { margin-bottom: 1rem; }
@@ -431,6 +441,8 @@ details.card summary { cursor: pointer; font-weight: 700; }
 /* ------------------------------------------------------------- responsive - */
 @media (max-width: 760px) {
   main, .app-header { padding-left: 1.1rem; padding-right: 1.1rem; }
+  main { padding-bottom: 5.5rem; }          /* clearance for the floating Tavernpedia button */
+  .top-nav { width: 100%; margin-left: 0; gap: .4rem 1.1rem; justify-content: flex-start; }
   .columns { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .detail-hero { flex-direction: column; }
@@ -444,5 +456,4 @@ details.card summary { cursor: pointer; font-weight: 700; }
   .wiki-aside { flex-basis: auto; border-right: none; border-top: 1px solid var(--panel-br); }
   .wiki-title { font-size: 1.8rem; }
   .wiki-portrait { width: 140px; height: 140px; }
-  .top-nav { gap: 1rem; }
 }
